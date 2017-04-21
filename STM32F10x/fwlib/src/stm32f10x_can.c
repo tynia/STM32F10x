@@ -728,12 +728,12 @@ void CAN_DBGFreeze(CAN_TypeDef* CANx, FunctionalState NewState)
   
   if (NewState != DISABLE)
   {
-    /* Enable Debug Freeze  */
+    /* Enable traceout Freeze  */
     CANx->MCR |= MCR_DBF;
   }
   else
   {
-    /* Disable Debug Freeze */
+    /* Disable traceout Freeze */
     CANx->MCR &= ~MCR_DBF;
   }
 }

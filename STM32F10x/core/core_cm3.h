@@ -123,7 +123,7 @@
 #define NVIC_AIRCR_VECTKEY    (0x5FA << 16)   /*!< AIRCR Key for write access   */
 #define NVIC_AIRCR_ENDIANESS        15        /*!< Endianess                    */
 
-/* Core Debug */
+/* Core traceout */
 #define CoreDebug_DEMCR_TRCENA (1 << 24)      /*!< DEMCR TRCENA enable          */
 #define ITM_TCR_ITMENA              1         /*!< ITM enable                   */
 
@@ -162,12 +162,12 @@ typedef struct
   __IO uint32_t SHCSR;                        /*!< System Handler Control and State Register                */
   __IO uint32_t CFSR;                         /*!< Configurable Fault Status Register                       */
   __IO uint32_t HFSR;                         /*!< Hard Fault Status Register                               */
-  __IO uint32_t DFSR;                         /*!< Debug Fault Status Register                              */
+  __IO uint32_t DFSR;                         /*!< traceout Fault Status Register                              */
   __IO uint32_t MMFAR;                        /*!< Mem Manage Address Register                              */
   __IO uint32_t BFAR;                         /*!< Bus Fault Address Register                               */
   __IO uint32_t AFSR;                         /*!< Auxiliary Fault Status Register                          */
   __I  uint32_t PFR[2];                       /*!< Processor Feature Register                               */
-  __I  uint32_t DFR;                          /*!< Debug Feature Register                                   */
+  __I  uint32_t DFR;                          /*!< traceout Feature Register                                   */
   __I  uint32_t ADR;                          /*!< Auxiliary Feature Register                               */
   __I  uint32_t MMFR[4];                      /*!< Memory Model Feature Register                            */
   __I  uint32_t ISAR[5];                      /*!< ISA Feature Register                                     */
@@ -194,11 +194,11 @@ typedef struct
     __O  uint32_t   u32;                      /*!< ITM Stimulus Port 32-bit              */
   }  PORT [32];                               /*!< ITM Stimulus Port Registers           */
        uint32_t RESERVED0[864];
-  __IO uint32_t TER;                          /*!< ITM Trace Enable Register             */
+  __IO uint32_t TER;                          /*!< ITM traceout Enable Register             */
        uint32_t RESERVED1[15];
-  __IO uint32_t TPR;                          /*!< ITM Trace Privilege Register          */
+  __IO uint32_t TPR;                          /*!< ITM traceout Privilege Register          */
        uint32_t RESERVED2[15];
-  __IO uint32_t TCR;                          /*!< ITM Trace Control Register            */
+  __IO uint32_t TCR;                          /*!< ITM traceout Control Register            */
        uint32_t RESERVED3[29];
   __IO uint32_t IWR;                          /*!< ITM Integration Write Register        */
   __IO uint32_t IRR;                          /*!< ITM Integration Read Register         */
@@ -254,20 +254,20 @@ typedef struct
 #endif
 
 
-/* Core Debug Register */
+/* Core traceout Register */
 typedef struct
 {
-  __IO uint32_t DHCSR;                        /*!< Debug Halting Control and Status Register       */
-  __O  uint32_t DCRSR;                        /*!< Debug Core Register Selector Register           */
-  __IO uint32_t DCRDR;                        /*!< Debug Core Register Data Register               */
-  __IO uint32_t DEMCR;                        /*!< Debug Exception and Monitor Control Register    */
+  __IO uint32_t DHCSR;                        /*!< traceout Halting Control and Status Register       */
+  __O  uint32_t DCRSR;                        /*!< traceout Core Register Selector Register           */
+  __IO uint32_t DCRDR;                        /*!< traceout Core Register Data Register               */
+  __IO uint32_t DEMCR;                        /*!< traceout Exception and Monitor Control Register    */
 } CoreDebug_Type;
 
 
 /* Memory mapping of Cortex-M3 Hardware */
 #define SCS_BASE            (0xE000E000)                              /*!< System Control Space Base Address    */
 #define ITM_BASE            (0xE0000000)                              /*!< ITM Base Address                     */
-#define CoreDebug_BASE      (0xE000EDF0)                              /*!< Core Debug Base Address              */
+#define CoreDebug_BASE      (0xE000EDF0)                              /*!< Core traceout Base Address              */
 #define SysTick_BASE        (SCS_BASE +  0x0010)                      /*!< SysTick Base Address                 */
 #define NVIC_BASE           (SCS_BASE +  0x0100)                      /*!< NVIC Base Address                    */
 #define SCB_BASE            (SCS_BASE +  0x0D00)                      /*!< System Control Block Base Address    */
@@ -277,7 +277,7 @@ typedef struct
 #define SysTick             ((SysTick_Type *)       SysTick_BASE)     /*!< SysTick configuration struct         */
 #define NVIC                ((NVIC_Type *)          NVIC_BASE)        /*!< NVIC configuration struct            */
 #define ITM                 ((ITM_Type *)           ITM_BASE)         /*!< ITM configuration struct             */
-#define CoreDebug           ((CoreDebug_Type *)     CoreDebug_BASE)   /*!< Core Debug configuration struct      */
+#define CoreDebug           ((CoreDebug_Type *)     CoreDebug_BASE)   /*!< Core traceout configuration struct      */
 
 #if defined (__MPU_PRESENT) && (__MPU_PRESENT == 1)
   #define MPU_BASE          (SCS_BASE +  0x0D90)                      /*!< Memory Protection Unit               */
@@ -1331,7 +1331,7 @@ static __INLINE void NVIC_SystemReset(void)
 }
 
 
-/* ##################################    Debug Output  function  ############################################ */
+/* ##################################    traceout Output  function  ############################################ */
 
 
 /**

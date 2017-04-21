@@ -3,7 +3,7 @@
 
 #include "stm32f10x.h"
 
-#define MAX_CACHE_SIZE 2048
+#define MAX_CACHE_SIZE 256
 
 typedef struct
 {
@@ -13,23 +13,23 @@ typedef struct
     u8* ptr;
     u8* head;
     u8* tail;
-    u32    capacity;
-} ringcache;
+    u32 capacity;
+} ring_cache;
 
 #ifdef _DEBUG
-u8 InitRingCache(u8* id, ringcache* cache, u8* buffer, u32 size);
+u8 ring_cache_init(u8* id, ring_cache* cache, u8* buffer, u32 size);
 #else
-u8 InitRingCache(ringcache* cache, u8* buffer, u32 size);
+u8 ring_cache_init(ring_cache* cache, u8* buffer, u32 size);
 #endif
-u8 ZeroCache(ringcache* cache);
-u8 IsEmpty(ringcache* cache);
-u8 IsFull(ringcache* cache);
-u32 WriteCache(ringcache* cache, u8* data, u32 len);
-u8 WriteCacheChar(ringcache* cache, u8* c);
-u8 WriteCacheCharNotSafe(ringcache* cache, u8* c);
-u8 ReadCacheChar(ringcache* cache, u8* c);
-u8 ReadCacheCharNotSafe(ringcache* cache, u8* c);
+u8 zero_cache(ring_cache* cache);
+u8 cache_is_empty(ring_cache* cache);
+u8 cache_is_full(ring_cache* cache);
+u32 write_cache(ring_cache* cache, u8* data, u32 len);
+u8 write_cache_char(ring_cache* cache, u8* c);
+u8 write_cache_char_not_safe(ring_cache* cache, u8* c);
+u8 read_cache_char(ring_cache* cache, u8* c);
+u8 read_cache_char_not_safe(ring_cache* cache, u8* c);
 
-u32 FindString(ringcache* cache, u8* dst);
+u32 cache_find_string(ring_cache* cache, u8* dst);
 
 #endif

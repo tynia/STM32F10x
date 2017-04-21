@@ -4,44 +4,60 @@
 #include "buffer/buffer.h"
 #include "stm32f10x_usart.h"
 
+enum
+{
+    AT_STATE_IDLE,
+    AT_STATE_SEND,
+    AT_STATE_RECV,
+    AT_STATE_TIMEOUT
+};
+
+typedef struct _tag_command
+{
+    u8 id;
+    u8 state;
+    u8* cmd;
+    u8* ok;
+    u8* err;
+} tag_command;
+
 static u8 buffer[MAX_CACHE_SIZE];
-static ringcache* cache;
-static tagEUSART GPRS;
-static tagEUSART OUTPUT;
-static tagCommand* curCommand = &AT_TABLE[AT_CMD_NONE];
+static ring_cache* cache;
+static u8 A6 = USART_COM_INVALID;
+static tag_command* curCommand = &AT_TABLE[AT_CMD_NONE];
 
 //////////////////////////////////////////////////////////////////////
-void GPRS_IRQHandler(void)
+void a6_irq_handler(void)
 {
     u8 r;
     if (curCommand->state != AT_STATE_IDLE)
     {
-        if (0 != RecvData(GPRS, &r))
+        if (0 != usart_recv_data(A6, &r))
         {
-            WriteCacheChar(cache, r);
+            write_cache_char(cache, r);
         }
     }
 
-    if (0 != IsOK(GPRS, USART_IT_IDLE))
+    if (0 != usart_is_ok(A6, USART_IT_IDLE))
     {
         curCommand->state = AT_STATE_RECV;
     }
 }
 
-void GPRSInit(tagEUSART EUSART, u16* irq)
+void a6_init(u8 idx, u16* irq)
 {
-    ASSERT((EUSART >= 0 && EUSART < USART_COM_COUNT), "invalid usart index");
+    ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
 
-    USARTInit(EUSART, irq, 3, 3, GPRS_IRQHandler);
+    usart_init(idx, irq, 3, 3, a6_irq_handler);
 #ifdef _DEBUG
-    InitRingCache("GPRS", cache, buffer, MAX_CACHE_SIZE);
+    ring_cache_init("GPRS", cache, buffer, MAX_CACHE_SIZE);
 #else
-    InitRingCache(cache, buffer, MAX_CACHE_SIZE);
+    ring_cache_init(cache, buffer, MAX_CACHE_SIZE);
 #endif
-    GPRS = EUSART;
+    A6 = idx;
 }
 
-static tagCommand AT_TABLE[] = {
+static tag_command AT_TABLE[] = {
     { AT_CMD_NONE,         AT_STATE_IDLE, NULL,               "OK",       NULL   },
     { AT_CMD_CCID,         AT_STATE_IDLE, "AT+CCID\r\n",      "+SCID:",   "+CME" },
     { AT_CMD_CREG,         AT_STATE_IDLE, "AT+CREG=1\r\n",    "+CREG:",   "+CME" },
@@ -59,7 +75,7 @@ u8 addr[] = { "\"TCP\",\"255.255.255.255\",00000" };
 u8 ips = 7;
 u8 ps = 24;
 
-u32 WaitCommandOK(u32 delay) // ms
+u32 wait_cmd_ok(u32 delay) // ms
 {
     if (delay == 0)
     {
@@ -79,7 +95,7 @@ u32 WaitCommandOK(u32 delay) // ms
             }
             else
             {
-                debug("wait time out[cmd: %s]", curCommand->cmd);
+                traceout("wait time out[cmd: %s]", curCommand->cmd);
                 return -1;
             }
         }
@@ -91,7 +107,7 @@ u32 WaitCommandOK(u32 delay) // ms
         {
             curCommand->cmd = NULL;
         }
-        u32 w = FindString(cache, curCommand->ok);
+        u32 w = cache_find_string(cache, curCommand->ok);
         if (w > 0)
         {
             // find the expect response
@@ -103,7 +119,7 @@ u32 WaitCommandOK(u32 delay) // ms
     return 0;
 }
 
-u8 Dial(u8* target, u32 port)
+u8 dial(u8* target, u32 port)
 {
     curCommand = &AT_TABLE[AT_CMD_CIPSTART];
     _send(0);
@@ -125,11 +141,12 @@ u32 _send(u32 len)
     {
         len = str_len(curCommand->cmd);
     }
-    USARTSendData(GPRS, curCommand->cmd, len);
-    u32 w = WaitCommandOK(0);
+    usart_send_data(A6, curCommand->cmd, len);
+    curCommand->state = AT_STATE_SEND; // begin to send
+    u32 w = wait_cmd_ok(0);
     if (-1 == w)
     {
-        debug("wait response time out, cmd: %s", curCommand->cmd);
+        traceout("wait response time out, cmd: %s", curCommand->cmd);
     }
 
     return w;
@@ -151,7 +168,7 @@ u8 _end()
     }
 }
 
-u8 SendData(u8* data, u32 len)
+u8 send_data(u8* data, u32 len)
 {
     // send at command
     _begin();
@@ -162,19 +179,19 @@ u8 SendData(u8* data, u32 len)
     _end();
 }
 
-u8 Close()
+u8 close()
 {
     curCommand = &AT_TABLE[AT_CMD_CIPDATA];
     u32 len = str_len(curCommand->cmd);
-    USARTSendData(GPRS, curCommand->cmd, len);
-    u32 w = WaitCommandOK(0);
+    usart_send_data(A6, curCommand->cmd, len);
+    u32 w = wait_cmd_ok(0);
     if (w != 0)
     {
         skipr(cache, w);
     }
 }
 
-u8 SendCommand(u8 cmd)
+u8 send_cmd(u8 cmd)
 {
     curCommand = &AT_TABLE[cmd];
     _send(0);

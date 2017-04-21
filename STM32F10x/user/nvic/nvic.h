@@ -3,6 +3,6 @@
 
 #include "stm32f10x.h"
 
-void NVICInit(u32 irq, u8 Priority, u8 SubPriority);
+void nvic_init(u32 irq, u8 priority, u8 sub_priority);
 
 #endif

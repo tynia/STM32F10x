@@ -44,6 +44,7 @@
     <ClCompile Include="fwlib\src\stm32f10x_wwdg.c" />
     <ClCompile Include="user\at\aithinker_a6.c" />
     <ClCompile Include="user\buffer\buffer.c" />
+    <ClCompile Include="user\debug\debug.c" />
     <ClCompile Include="user\gpio\gpio.c" />
     <ClCompile Include="user\led\led.c" />
     <ClCompile Include="user\nvic\nvic.c" />
@@ -80,6 +81,7 @@
     <ClInclude Include="fwlib\stm32f10x_wwdg.h" />
     <ClInclude Include="user\at\aithinker_a6.h" />
     <ClInclude Include="user\buffer\buffer.h" />
+    <ClInclude Include="user\debug\debug.h" />
     <ClInclude Include="user\gpio\gpio.h" />
     <ClInclude Include="user\led\led.h" />
     <ClInclude Include="user\nvic\nvic.h" />
