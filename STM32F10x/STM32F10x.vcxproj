@@ -18,6 +18,83 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="core\core_cm3.c" />
+    <ClCompile Include="fwlib\src\misc.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_adc.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_bkp.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_can.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_crc.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_dac.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_dbgmcu.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_dma.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_exti.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_flash.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_fsmc.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_gpio.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_i2c.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_iwdg.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_pwr.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_rcc.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_rtc.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_sdio.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_spi.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_tim.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_usart.c" />
+    <ClCompile Include="fwlib\src\stm32f10x_wwdg.c" />
+    <ClCompile Include="user\at\aithinker_a6.c" />
+    <ClCompile Include="user\buffer\buffer.c" />
+    <ClCompile Include="user\gpio\gpio.c" />
+    <ClCompile Include="user\led\led.c" />
+    <ClCompile Include="user\nvic\nvic.c" />
+    <ClCompile Include="user\rcc\rcc.c" />
+    <ClCompile Include="user\usart\irq_usart_handler.c" />
+    <ClCompile Include="user\usart\usart.c" />
+    <ClCompile Include="user\util\util.c" />
+    <ClCompile Include="utilities\stm3210e_eval_lcd.c" />
+    <ClCompile Include="utilities\stm32_eval.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="core\core_cm3.h" />
+    <ClInclude Include="fwlib\misc.h" />
+    <ClInclude Include="fwlib\stm32f10x_adc.h" />
+    <ClInclude Include="fwlib\stm32f10x_bkp.h" />
+    <ClInclude Include="fwlib\stm32f10x_can.h" />
+    <ClInclude Include="fwlib\stm32f10x_crc.h" />
+    <ClInclude Include="fwlib\stm32f10x_dac.h" />
+    <ClInclude Include="fwlib\stm32f10x_dbgmcu.h" />
+    <ClInclude Include="fwlib\stm32f10x_dma.h" />
+    <ClInclude Include="fwlib\stm32f10x_exti.h" />
+    <ClInclude Include="fwlib\stm32f10x_flash.h" />
+    <ClInclude Include="fwlib\stm32f10x_fsmc.h" />
+    <ClInclude Include="fwlib\stm32f10x_gpio.h" />
+    <ClInclude Include="fwlib\stm32f10x_i2c.h" />
+    <ClInclude Include="fwlib\stm32f10x_iwdg.h" />
+    <ClInclude Include="fwlib\stm32f10x_pwr.h" />
+    <ClInclude Include="fwlib\stm32f10x_rcc.h" />
+    <ClInclude Include="fwlib\stm32f10x_rtc.h" />
+    <ClInclude Include="fwlib\stm32f10x_sdio.h" />
+    <ClInclude Include="fwlib\stm32f10x_spi.h" />
+    <ClInclude Include="fwlib\stm32f10x_tim.h" />
+    <ClInclude Include="fwlib\stm32f10x_usart.h" />
+    <ClInclude Include="fwlib\stm32f10x_wwdg.h" />
+    <ClInclude Include="user\at\aithinker_a6.h" />
+    <ClInclude Include="user\buffer\buffer.h" />
+    <ClInclude Include="user\gpio\gpio.h" />
+    <ClInclude Include="user\led\led.h" />
+    <ClInclude Include="user\nvic\nvic.h" />
+    <ClInclude Include="user\rcc\rcc.h" />
+    <ClInclude Include="user\usart\irq_usart_handler.h" />
+    <ClInclude Include="user\usart\usart.h" />
+    <ClInclude Include="user\util\util.h" />
+    <ClInclude Include="utilities\fonts.h" />
+    <ClInclude Include="utilities\stm3210e_eval.h" />
+    <ClInclude Include="utilities\stm3210e_eval_lcd.h" />
+    <ClInclude Include="utilities\stm32_eval.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="core\startup_stm32f10x_hd.s" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9EBEA63E-AF7B-44A7-A2D8-55CDE6078274}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -148,89 +225,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="core\core_cm3.c" />
-    <ClCompile Include="fwlib\src\misc.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_adc.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_bkp.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_can.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_crc.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_dac.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_dbgmcu.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_dma.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_exti.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_flash.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_fsmc.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_gpio.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_i2c.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_iwdg.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_pwr.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_rcc.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_rtc.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_sdio.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_spi.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_tim.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_usart.c" />
-    <ClCompile Include="fwlib\src\stm32f10x_wwdg.c" />
-    <ClCompile Include="system\stm32f10x_it.c" />
-    <ClCompile Include="system\system_stm32f10x.c" />
-    <ClCompile Include="user\at\aithinker_a6.c" />
-    <ClCompile Include="user\buffer\buffer.c" />
-    <ClCompile Include="user\gpio\gpio.c" />
-    <ClCompile Include="user\led\led.c" />
-    <ClCompile Include="user\nvic\nvic.c" />
-    <ClCompile Include="user\rcc\rcc.c" />
-    <ClCompile Include="user\usart\irq_usart_handler.c" />
-    <ClCompile Include="user\usart\usart.c" />
-    <ClCompile Include="user\util\util.c" />
-    <ClCompile Include="utilities\stm3210e_eval_lcd.c" />
-    <ClCompile Include="utilities\stm32_eval.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="core\core_cm3.h" />
-    <ClInclude Include="fwlib\misc.h" />
-    <ClInclude Include="fwlib\stm32f10x_adc.h" />
-    <ClInclude Include="fwlib\stm32f10x_bkp.h" />
-    <ClInclude Include="fwlib\stm32f10x_can.h" />
-    <ClInclude Include="fwlib\stm32f10x_crc.h" />
-    <ClInclude Include="fwlib\stm32f10x_dac.h" />
-    <ClInclude Include="fwlib\stm32f10x_dbgmcu.h" />
-    <ClInclude Include="fwlib\stm32f10x_dma.h" />
-    <ClInclude Include="fwlib\stm32f10x_exti.h" />
-    <ClInclude Include="fwlib\stm32f10x_flash.h" />
-    <ClInclude Include="fwlib\stm32f10x_fsmc.h" />
-    <ClInclude Include="fwlib\stm32f10x_gpio.h" />
-    <ClInclude Include="fwlib\stm32f10x_i2c.h" />
-    <ClInclude Include="fwlib\stm32f10x_iwdg.h" />
-    <ClInclude Include="fwlib\stm32f10x_pwr.h" />
-    <ClInclude Include="fwlib\stm32f10x_rcc.h" />
-    <ClInclude Include="fwlib\stm32f10x_rtc.h" />
-    <ClInclude Include="fwlib\stm32f10x_sdio.h" />
-    <ClInclude Include="fwlib\stm32f10x_spi.h" />
-    <ClInclude Include="fwlib\stm32f10x_tim.h" />
-    <ClInclude Include="fwlib\stm32f10x_usart.h" />
-    <ClInclude Include="fwlib\stm32f10x_wwdg.h" />
-    <ClInclude Include="system\stm32f10x.h" />
-    <ClInclude Include="system\stm32f10x_conf.h" />
-    <ClInclude Include="system\stm32f10x_it.h" />
-    <ClInclude Include="system\system_stm32f10x.h" />
-    <ClInclude Include="user\at\aithinker_a6.h" />
-    <ClInclude Include="user\buffer\buffer.h" />
-    <ClInclude Include="user\gpio\gpio.h" />
-    <ClInclude Include="user\led\led.h" />
-    <ClInclude Include="user\nvic\nvic.h" />
-    <ClInclude Include="user\rcc\rcc.h" />
-    <ClInclude Include="user\usart\irq_usart_handler.h" />
-    <ClInclude Include="user\usart\usart.h" />
-    <ClInclude Include="user\util\util.h" />
-    <ClInclude Include="utilities\fonts.h" />
-    <ClInclude Include="utilities\stm3210e_eval.h" />
-    <ClInclude Include="utilities\stm3210e_eval_lcd.h" />
-    <ClInclude Include="utilities\stm32_eval.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="core\startup_stm32f10x_hd.s" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

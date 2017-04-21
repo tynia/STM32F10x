@@ -11,6 +11,7 @@ enum
 void wait(u32 clock_cycle);
 u8  str_cmp(u8* src, u8* dest, u32 len);
 u32 str_len(u8* str);
+void uitoa(u32 i, u8* a);
 
 #ifdef _DEBUG
 void panic();

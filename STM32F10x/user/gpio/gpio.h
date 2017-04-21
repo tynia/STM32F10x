@@ -17,4 +17,5 @@ typedef enum _tagEGPIO
 
 void GPIOInit(tagEGPIO EGPIO, u16 Pinx, u8 Mode, u8 Speed);
 
+void GPIOSetBits(tagEGPIO EGPIO, u16 Pin, u8 on);
 #endif

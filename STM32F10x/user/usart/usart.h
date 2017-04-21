@@ -2,8 +2,8 @@
 #define _STM32_USART_H_
 
 #include "stm32f10x.h"
-#include "stm32f10x_usart.h"
-#include "stm32f10x_gpio.h"
+#include "irq_usart_handler.h"
+
 
 typedef enum _tagEUSART
 {
@@ -12,7 +12,7 @@ typedef enum _tagEUSART
     USART_COM_3 = 2,
     USART_COM_4 = 3,
     USART_COM_5 = 4,
-    USART_COM_R0 = 5, // USART REDIRECT
+    USART_COM_R0 = 5, // USART REMAP BEGIN
     USART_COM_R1 = 5,
     USART_COM_R2 = 6,
     USART_COM_R3 = 7,
@@ -20,21 +20,13 @@ typedef enum _tagEUSART
     USART_COM_COUNT
 } tagEUSART;
 
-typedef struct _tagUSART
-{
-    u8  EGPIO;
-    u8  Chn;
-    u8  ChnPreemptionPriority;
-    u8  ChnSubPriority;
-    u8  ChnState;
-    u16 Tx;
-    u16 Rx;
-    u16 Vcc;
-    USART_TypeDef* USARTx;
-    GPIO_TypeDef*  GPIOx;
-} tagUSART;
+void USARTInit(tagEUSART EUSART, u16* irp, u8 PrePriority, u8 SubPriority, IRQ_CALLBACK_FUNC func);
 
-void USARTInit(tagUSART* USARTx);
+void USARTSendData(tagEUSART EUSART, u8* data, u32 len);
 
-void Power(tagUSART* USARTx, u8 on);
+u8 RecvData(tagEUSART EUSART, u8* c);
+
+u8 IsOK(tagEUSART EUSART, u16 irq)
+
+void Power(tagEUSART EUSART, u8 on);
 #endif

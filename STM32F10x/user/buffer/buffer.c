@@ -157,7 +157,7 @@ u32 WriteCache(ringcache* cache, u8* data, u32 len)
     return wlen;
 }
 
-u8 WriteCacheChar(ringcache* cache, u8 c)
+u8 WriteCacheChar(ringcache* cache, u8* c)
 {
     if (NULL == cache)
     {
@@ -177,7 +177,13 @@ u8 WriteCacheChar(ringcache* cache, u8 c)
         return 0;
     }
 
-    *(cache->head) = c;
+    if (NULL == c)
+    {
+        debug("invalid char buffer");
+        return -1;
+    }
+
+    *(cache->head) = *c;
     ++cache->head;
 
     if (cache->head >= cache->ptr + cache->capacity)
@@ -188,7 +194,7 @@ u8 WriteCacheChar(ringcache* cache, u8 c)
     return 1;
 }
 
-u8 WriteCacheCharNotSafe(ringcache* cache, u8 c)
+u8 WriteCacheCharNotSafe(ringcache* cache, u8* c)
 {
     ASSERT(NULL != cache, "cache is uninitialized");
     ASSERT(NULL != cache->ptr, "invalid cache, cache ptr is NULL");
@@ -196,7 +202,13 @@ u8 WriteCacheCharNotSafe(ringcache* cache, u8 c)
     ASSERT(NULL != cache->tail, "invalid cache, tail pointer is NULL");
     ASSERT(NULL != c, "invalid char buffer, char pointer is NULL");
 
-    *(cache->head) = c;
+    if (cache->head + 1 == cache->tail)
+    {
+        debug("cache is full");
+        return 0;
+    }
+
+    *(cache->head) = *c;
     ++cache->head;
 
     if (cache->head >= cache->ptr + cache->capacity)
@@ -223,7 +235,7 @@ u8 ReadCacheChar(ringcache* cache, u8* c)
 
     if (NULL == c)
     {
-        debug("char is not initialized");
+        debug("char buffer is not initialized");
         return -1;
     }
 
@@ -255,6 +267,12 @@ u8 ReadCacheCharNotSafe(ringcache* cache, u8* c)
     ASSERT(NULL != cache->tail, "invalid cache, tail pointer is NULL");
     ASSERT(NULL != c, "invalid char buffer, char pointer is NULL");
 
+    if (cache->head == cache->tail)
+    {
+        debug("cache is empty");
+        return 0;
+    }
+
     *c = *(cache->tail);
     ++cache->tail;
 
@@ -264,4 +282,62 @@ u8 ReadCacheCharNotSafe(ringcache* cache, u8* c)
     }
 
     return 1;
+}
+
+u32 FindString(ringcache* cache, u8* dst)
+{
+    if (NULL == cache)
+    {
+        debug("cache is uninitialized");
+        return -1; // error for none
+    }
+
+    if (NULL == dst)
+    {
+        return 0;
+    }
+
+    if (cache->head == cache->tail)
+    {
+        debug("cache is empty");
+        return -1;
+    }
+
+    u32 i = 0;
+    u32 at = 0; // digit the length of read
+    u8* ptr = cache->tail;
+    for (; ptr != cache->head; ++ptr)
+    {
+        if (ptr >= cache->ptr + cache->capacity)
+        {
+            ptr = cache->ptr;
+        }
+
+        if (*(dst + i) == '\0')
+        {
+            return at;
+        }
+
+        if (*(dst + i) == *(ptr))
+        {
+            ++i;
+        }
+        else
+        {
+            i = 0;
+        }
+
+        ++at;
+    }
+
+    return 0;
+}
+
+void skipr(ringcache* cache, u32 w)
+{
+    if (cache->tail + w > cache->ptr + cache->capacity)
+    {
+        u32 sk = w - (cache->capacity - (cache->tail - cache->ptr));
+        cache->tail = cache->ptr + sk;
+    }
 }

@@ -28,3 +28,17 @@ void GPIOInit(tagEGPIO EGPIO, u16 Pinx, u8 Mode, u8 Speed)
     GPIO_InitStruct.GPIO_Speed = Speed;
     GPIO_Init(GPIOGroup[EGPIO].GPIOx, &GPIO_InitStruct);
 }
+
+void GPIOSetBits(tagEGPIO EGPIO, u16 Pin, u8 on)
+{
+    ASSERT((EGPIO >= 0 && EGPIO < GPIO_COUNT), "invalid GPIO tag");
+
+    if (0 != on)
+    {
+        GPIO_SetBits(GPIOGroup[EGPIO].GPIOx, Pin);
+    }
+    else
+    {
+        GPIO_ResetBits(GPIOGroup[EGPIO].GPIOx, Pin);
+    }
+}
