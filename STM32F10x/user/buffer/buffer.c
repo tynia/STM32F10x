@@ -16,17 +16,17 @@ u8 ring_cache_init(ring_cache* cache, u8* buffer, u32 size)
     cache->capacity = size;
 }
 
-u8 zero_cache(ring_cache* cache)
+s8 zero_cache(ring_cache* cache)
 {
     if (NULL == cache)
     {
-        traceout("cache is uninitialized");
+        trace("cache is uninitialized");
         return -1;
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        traceout("invalid cache, one or more ring cache member is NULL");
+        trace("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
@@ -39,18 +39,18 @@ u8 zero_cache(ring_cache* cache)
     return 0;
 }
 
-u8 cache_is_empty(ring_cache* cache)
+s8 cache_is_empty(ring_cache* cache)
 {
     if (NULL == cache)
     {
-        traceout("cache is uninitialized");
+        trace("cache is uninitialized");
         return 0;
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        traceout("invalid cache, one or more ring cache member is NULL");
-        return 0;
+        trace("invalid cache, one or more ring cache member is NULL");
+        return -1;
     }
 
     if (cache->head == cache->tail)
@@ -61,17 +61,17 @@ u8 cache_is_empty(ring_cache* cache)
     return 0;
 }
 
-u8 cache_is_full(ring_cache* cache)
+s8 cache_is_full(ring_cache* cache)
 {
     if (NULL == cache)
     {
-        traceout("cache is uninitialized");
+        trace("cache is uninitialized");
         return 0;
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        traceout("invalid cache, one or more ring cache member is NULL");
+        trace("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
@@ -83,29 +83,29 @@ u8 cache_is_full(ring_cache* cache)
     return 0;
 }
 
-u32 write_cache(ring_cache* cache, u8* data, u32 len)
+s32 write_cache(ring_cache* cache, u8* data, u16 len)
 {
     if (NULL == cache)
     {
-        traceout("cache is uninitialized");
+        trace("cache is uninitialized");
         return -1; // error for none
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        traceout("invalid cache, one or more ring cache member is NULL");
+        trace("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
     if (NULL == data)
     {
-        traceout("invalid data, NULL pointer in");
+        trace("invalid data, NULL pointer in");
         return 0;
     }
 
     if (cache->head + 1 == cache->tail)
     {
-        traceout("cache is full");
+        trace("cache is full");
         return 0;
     }
 
@@ -125,11 +125,11 @@ u32 write_cache(ring_cache* cache, u8* data, u32 len)
 
     if (len > rest)
     {
-        traceout("warning: the length to write [%d] is greater than rest buffer size[%d]", len, rest);
+        trace("warning: the length to write [%d] is greater than rest buffer size[%d]", len, rest);
     }
 
-    traceout("the rest size of cache is %d", rest);
-    u32 wlen = 0;
+    trace("the rest size of cache is %d", rest);
+    u16 wlen = 0;
     // head is in front of the tail
     if (cache->tail <= cache->head)
     {
@@ -157,29 +157,29 @@ u32 write_cache(ring_cache* cache, u8* data, u32 len)
     return wlen;
 }
 
-u8 write_cache_char(ring_cache* cache, u8* c)
+s8 write_cache_char(ring_cache* cache, u8* c)
 {
     if (NULL == cache)
     {
-        traceout("cache is uninitialized");
+        trace("cache is uninitialized");
         return -1; // error for none
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        traceout("invalid cache, one or more ring cache member is NULL");
+        trace("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
     if (cache->head + 1 == cache->tail)
     {
-        traceout("cache is full");
+        trace("cache is full");
         return 0;
     }
 
     if (NULL == c)
     {
-        traceout("invalid char buffer");
+        trace("invalid char buffer");
         return -1;
     }
 
@@ -204,7 +204,7 @@ u8 write_cache_char_not_safe(ring_cache* cache, u8* c)
 
     if (cache->head + 1 == cache->tail)
     {
-        traceout("cache is full");
+        trace("cache is full");
         return 0;
     }
 
@@ -219,29 +219,29 @@ u8 write_cache_char_not_safe(ring_cache* cache, u8* c)
     return 1;
 }
 
-u8 read_cache_char(ring_cache* cache, u8* c)
+s8 read_cache_char(ring_cache* cache, u8* c)
 {
     if (NULL == cache)
     {
-        traceout("cache is uninitialized");
+        trace("cache is uninitialized");
         return -1; // error for none
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        traceout("invalid cache, one or more ring cache member is NULL");
+        trace("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
     if (NULL == c)
     {
-        traceout("char buffer is not initialized");
+        trace("char buffer is not initialized");
         return -1;
     }
 
     if (cache->head == cache->tail)
     {
-        traceout("cache is empty");
+        trace("cache is empty");
         return 0;
     }
 
@@ -269,7 +269,7 @@ u8 read_cache_char_not_safe(ring_cache* cache, u8* c)
 
     if (cache->head == cache->tail)
     {
-        traceout("cache is empty");
+        trace("cache is empty");
         return 0;
     }
 
@@ -284,11 +284,11 @@ u8 read_cache_char_not_safe(ring_cache* cache, u8* c)
     return 1;
 }
 
-u32 cache_find_string(ring_cache* cache, u8* dst)
+s8 cache_find_string(ring_cache* cache, u8* dst)
 {
     if (NULL == cache)
     {
-        traceout("cache is uninitialized");
+        trace("cache is uninitialized");
         return -1; // error for none
     }
 
@@ -299,12 +299,11 @@ u32 cache_find_string(ring_cache* cache, u8* dst)
 
     if (cache->head == cache->tail)
     {
-        traceout("cache is empty");
+        trace("cache is empty");
         return -1;
     }
 
     u32 i = 0;
-    u32 at = 0; // digit the length of read
     u8* ptr = cache->tail;
     for (; ptr != cache->head; ++ptr)
     {
@@ -315,7 +314,7 @@ u32 cache_find_string(ring_cache* cache, u8* dst)
 
         if (*(dst + i) == '\0')
         {
-            return at;
+            return 1;
         }
 
         if (*(dst + i) == *(ptr))
@@ -326,18 +325,12 @@ u32 cache_find_string(ring_cache* cache, u8* dst)
         {
             i = 0;
         }
-
-        ++at;
     }
 
     return 0;
 }
 
-void skipr(ring_cache* cache, u32 w)
+void mark_read(ring_cache* cache)
 {
-    if (cache->tail + w > cache->ptr + cache->capacity)
-    {
-        u32 sk = w - (cache->capacity - (cache->tail - cache->ptr));
-        cache->tail = cache->ptr + sk;
-    }
+    cache->tail = cache->head;
 }

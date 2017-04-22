@@ -3,11 +3,23 @@
 
 #include "stm32f10x.h"
 
+enum
+{
+    LED_A = 0,
+    LED_B,
+    LED_C,
+    LED_D,
+    LED_E,
+    LED_F,
+    LED_G,
+    LED_COUNT,
+};
+
 void led_init(u8 idx, u8 pinx);
 
-void led_on(u8 idx, u16 Pin, u32 timespan);
+void led_on(u8 idx, u16 pin, u32 timespan);
 
-void led_off(u8 idx, u16 Pin, u32 timespan);
+void led_off(u8 idx, u16 pin, u32 timespan);
 /*
  * @function: make led2 twinkle
  * @param:

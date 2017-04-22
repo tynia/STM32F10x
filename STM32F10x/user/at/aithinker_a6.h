@@ -16,13 +16,14 @@ enum
     AT_CMD_CIPDATA,
     AT_CMD_CIPDATA_DONE,
     AT_CMD_CIPCLOSE,
+    AT_CMD_CUSTOM,
 };
 
 void a6_init(u8 idx, u16* irq);
-u32 wait_cmd_ok(u32 delay);
+u8 wait_cmd_ok(u32 delay);
 u8 dial(u8* target, u32 port);
 u8 send_data(u8* data, u32 len);
 u8 close();
-u8 send_cmd(u8 cmd);
+u8 send_cmd(u8* cmd);
 
 #endif

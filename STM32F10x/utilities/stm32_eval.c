@@ -393,7 +393,7 @@ void STM_EVAL_COMInit(COM_TypeDef COM, USART_InitTypeDef* USART_InitStruct)
   GPIO_Init(COM_PORT[COM], &GPIO_InitStructure);
 
   /* USART configuration */
-  usart_init(COM_USART[COM], USART_InitStruct);
+  USART_Init(COM_USART[COM], USART_InitStruct);
     
   /* Enable USART */
   USART_Cmd(COM_USART[COM], ENABLE);

@@ -1,41 +1,14 @@
 #include "debug.h"
-#include "buffer/buffer.h"
-#include "usart/usart.h"
-#include "stm32f10x_usart.h"
 
-static u8 buffer[MAX_CACHE_SIZE];
-static ring_cache* cache;
-static u8 DEBUGLOG = USART_COM_INVALID;
+#define TRACE_BUFFER_SIZE 256
+#define DEBUG_BUFFER_SIZE 512
 
-//////////////////////////////////////////////////////////////////////
-void debug_irq_handler(void)
+DEBUG_CALLBACK cb = NULL;
+
+void set_debug_handler(DEBUG_CALLBACK callback)
 {
-    u8 r;
-    if (0 != usart_recv_data(DEBUGLOG, &r))
-    {
-        write_cache_char(cache, r);
-    }
-
-    if (0 != usart_is_ok(DEBUGLOG, USART_IT_IDLE))
-    {
-        debug("")
-        curCommand->state = AT_STATE_RECV;
-    }
+    cb = callback;
 }
-
-void Debug(u8 idx, u16* irq)
-{
-    ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
-
-    usart_init(idx, irq, 3, 3, debug_irq_handler);
-#ifdef _DEBUG
-    ring_cache_init("DEBUG", cache, buffer, MAX_CACHE_SIZE);
-#else
-    ring_cache_init(cache, buffer, MAX_CACHE_SIZE);
-#endif
-    DEBUGLOG = idx;
-}
-
 /////////////////////////////////////////////////
 #ifdef _DEBUG
 void panic()
@@ -44,28 +17,32 @@ void panic()
 }
 #endif
 
+static u8 debug_buffer[DEBUG_BUFFER_SIZE];
+static u8 trace_buffer[TRACE_BUFFER_SIZE];
+static u8* traceInfo = "[File:%32s Line:%d Func:%32s] Msg:\r\n%s\r\n";
 void debug(u8* fmt, ...)
 {
-    va_list args;
-    va_start(args, fmt);
-    vsprintf(fmt, args);
-#ifdef _DEBUG
-    // TODO:
-#else
-    // TODO:
-#endif
-    va_end(args);
+    if (NULL != cb)
+    {
+        va_list args;
+        va_start(args, fmt);
+        vsnprintf(debug_buffer, DEBUG_BUFFER_SIZE, fmt, args);
+        va_end(args);
+        u32 len = str_len(debug_buffer);
+        cb(debug_buffer, len);
+    }
 }
 
-void trace(u8* file, u32 line, u8* func, u8* fmt, ...)
+void wrap_trace(u8* file, u32 line, u8* func, u8* fmt, ...)
 {
-    static u8* traceInfo = "File: %-32s Line: %d\r\nFunc: %-32s Msg:\r\n%s\r\n";
-    va_list args;
-    va_start(args, fmt);
-    vsprintf(fmt, args);
-    va_end(args);
+    if (NULL != cb)
+    {
+        zero(trace_buffer, TRACE_BUFFER_SIZE);
+        va_list args;
+        va_start(args, fmt);
+        vsnprintf(trace_buffer, TRACE_BUFFER_SIZE, fmt, args);
+        va_end(args);
 
-    // TODO:
-    // write to TX pin for log
-
+        debug(traceInfo, file, line, func, trace_buffer);
+    }
 }

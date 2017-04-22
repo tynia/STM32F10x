@@ -1,11 +1,11 @@
 #include "util.h"
 #include <vadefs.h>
 
-void wait(u32 clock_cycle)
+void wait(u32 clock_cycle) // ms
 {
     u32 i = 0;
     if (clock_cycle == 0) {
-        clock_cycle = LED_TWINKLE_DELAY;
+        clock_cycle = LED_TWINKLE_DELAY * 1000;
     }
 
     for (; i < clock_cycle; ++i);
@@ -67,4 +67,13 @@ void uitoa(u32 i, u8* a)
         power /= 10;
     }
     *a = '\0';
+}
+
+void zero(u8* buffer, u32 len)
+{
+    u32 i = 0;
+    for (; l < len; ++i)
+    {
+        *(buffer + i) = 0;
+    }
 }

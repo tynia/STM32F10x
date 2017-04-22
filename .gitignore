@@ -9,6 +9,8 @@
 *.opensdf
 *.user
 *.filters
+*.suo
+*.db
 
 # Precompiled Headers
 *.gch
