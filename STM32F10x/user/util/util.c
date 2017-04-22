@@ -7,6 +7,7 @@ void wait(u32 clock_cycle) // ms
     if (clock_cycle == 0) {
         clock_cycle = LED_TWINKLE_DELAY * 1000;
     }
+    clock_cycle = clock_cycle * 1000;
 
     for (; i < clock_cycle; ++i);
 }
@@ -16,7 +17,7 @@ u8  str_cmp(u8* src, u8* dst, u32 len)
     u32 i = 0;
     if (NULL == src || NULL == dst)
     {
-        return -0;
+        return -1;
     }
 
     while (i < len)

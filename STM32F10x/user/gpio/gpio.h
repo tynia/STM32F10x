@@ -3,7 +3,7 @@
 
 #include "stm32f10x.h"
 
-enum
+typedef enum _tagEGPIO
 {
     GPIO_A = 0,
     GPIO_B,
@@ -13,10 +13,10 @@ enum
     GPIO_F,
     GPIO_G,
     GPIO_COUNT,
-};
+} tagEGPIO;
 
-void gpio_init(u8 idx, u16 pinx, u8 mode, u8 speed);
+void gpio_init(tagEGPIO idx, u16 pinx, u8 mode, u8 speed);
 
-void gpio_set_bits(u8 idx, u16 pin, u8 on);
+void gpio_set_bits(tagEGPIO idx, u16 pin, u8 on);
 
 #endif

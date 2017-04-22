@@ -15,7 +15,7 @@ static IRQ_CALLBACK_FUNC irq[USART_IRQ_COUNT];
 
 void set_irq_handler(u8 idx, IRQ_CALLBACK_FUNC func)
 {
-    ASSERT((idx >= USART_IRQ_1 && idx < USART_IRQ_COUNT), "invalid usart tag index");
+    ASSERT((idx >= USART_IRQ_1 && idx < USART_IRQ_COUNT), "invalid USART IRQ index");
     irq[idx] = func;
 }
 

@@ -4,13 +4,13 @@
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
 
-typedef struct _tag_gpio_group
+typedef struct _tagGPIO
 {
-    u32 gpio_periph;
-    GPIO_TypeDef* gpiox;
-} tag_gpio_group;
+    u32 GPIO_Periph;
+    GPIO_TypeDef* GPIOx;
+} tagGPIO;
 
-static tag_gpio_group GPIOGroup[GPIO_COUNT] = {
+static tagGPIO GPIOGroup[GPIO_COUNT] = {
     { RCC_APB2Periph_GPIOA, GPIOA },
     { RCC_APB2Periph_GPIOB, GPIOB },
     { RCC_APB2Periph_GPIOC, GPIOC },
@@ -20,27 +20,27 @@ static tag_gpio_group GPIOGroup[GPIO_COUNT] = {
     { RCC_APB2Periph_GPIOG, GPIOG }
 };
 
-void gpio_init(u8 idx, u16 pinx, u8 mode, u8 speed)
+void gpio_init(tagEGPIO idx, u16 pinx, u8 mode, u8 speed)
 {
-    GPIO_InitTypeDef gpio_init_struct;
-    ASSERT((idx >= 0 && idx < GPIO_COUNT), "invalid GPIO idx");
-    RCC_APB2PeriphClockCmd(GPIOGroup[idx].gpio_periph, ENABLE);
-    gpio_init_struct.GPIO_Pin = pinx;
-    gpio_init_struct.GPIO_Mode = (GPIOMode_TypeDef)mode;
-    gpio_init_struct.GPIO_Speed = (GPIOSpeed_TypeDef)speed;
-    GPIO_Init(GPIOGroup[idx].gpiox, &gpio_init_struct);
+    GPIO_InitTypeDef GPIO_InitStruct;
+    ASSERT((idx >= 0 && idx < GPIO_COUNT), "invalid GPIO index");
+    RCC_APB2PeriphClockCmd(GPIOGroup[idx].GPIO_Periph, ENABLE);
+    GPIO_InitStruct.GPIO_Pin = pinx;
+    GPIO_InitStruct.GPIO_Mode = (GPIOMode_TypeDef)mode;
+    GPIO_InitStruct.GPIO_Speed = (GPIOSpeed_TypeDef)speed;
+    GPIO_Init(GPIOGroup[idx].GPIOx, &GPIO_InitStruct);
 }
 
-void gpio_set_bits(u8 idx, u16 pin, u8 on)
+void gpio_set_bits(tagEGPIO idx, u16 pin, u8 on)
 {
-    ASSERT((idx >= 0 && idx < GPIO_COUNT), "invalid GPIO idx");
+    ASSERT((idx >= 0 && idx < GPIO_COUNT), "invalid GPIO index");
 
     if (0 != on)
     {
-        GPIO_SetBits(GPIOGroup[idx].gpiox, pin);
+        GPIO_SetBits(GPIOGroup[idx].GPIOx, pin);
     }
     else
     {
-        GPIO_ResetBits(GPIOGroup[idx].gpiox, pin);
+        GPIO_ResetBits(GPIOGroup[idx].GPIOx, pin);
     }
 }

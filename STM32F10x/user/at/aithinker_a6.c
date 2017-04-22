@@ -16,20 +16,36 @@ enum
     AT_STATE_TIMEOUT
 };
 
+enum
+{
+    AT_CMD_NONE = 0,
+    AT_CMD_CCID,
+    AT_CMD_CREG,
+    AT_CMD_CGATT,
+    AT_CMD_CGACT,
+    AT_CMD_CSQ,
+    AT_CMD_CIPSTART,
+    AT_CMD_CIPSEND,
+    AT_CMD_CIPDATA,
+    AT_CMD_CIPDATA_DONE,
+    AT_CMD_CIPCLOSE,
+    AT_CMD_CUSTOM,
+};
+
 #define AT_CHAR_CR "\r\n"
 #define AT_CHAR_CR_SIZE 2
 #define CUSTOM_CMD_SIZE 100 + AT_CHAR_CR_SIZE
 
-typedef struct _tag_command
+typedef struct _tagATCommand
 {
     u8 id;
     u8 state;
     u8* cmd;
     u8* ok;
     u8* err;
-} tag_command;
+} tagATCommand;
 
-static tag_command AT_TABLE[] = {
+static tagATCommand AT_TABLE[] = {
     { AT_CMD_NONE,         AT_STATE_IDLE, 0,                  "OK",       0      },
     { AT_CMD_CCID,         AT_STATE_IDLE, "AT+CCID\r\n",      "+SCID:",   "+CME" },
     { AT_CMD_CREG,         AT_STATE_IDLE, "AT+CREG=1\r\n",    "+CREG:",   "+CME" },
@@ -44,7 +60,7 @@ static tag_command AT_TABLE[] = {
     { AT_CMD_CUSTOM,       AT_STATE_IDLE, 0,                  0,          "+CME" } 
 };
 
-static tag_command* curCommand = &AT_TABLE[AT_CMD_NONE];
+static tagATCommand* curCommand = &AT_TABLE[AT_CMD_NONE];
 static u8 buffer[MAX_CACHE_SIZE];
 static ring_cache* cache = 0;
 static u8 a6 = USART_INVALID;
@@ -74,14 +90,13 @@ void a6_irq_handler(void)
                 curCommand->state = AT_STATE_RECV;
             }
 
-            //led_twinkle(LED_A, GPIO_Pin_2, 1, 500);
+            led_twinkle(LED_A, GPIO_Pin_2, 2, 1000);
         }
     }
 
     if (0 != usart_is_ok(a6, USART_IT_TC))
     {
-        wait(2000);
-        //led_twinkle(LED_A, GPIO_Pin_2, 3, 2000);
+        led_twinkle(LED_A, GPIO_Pin_2, 3, 1000);
     }
 }
 
@@ -145,7 +160,7 @@ void super_cmd_handler(u8* data, u32 len)
         cmd = "AT+CIFSR\r\n";
     }
     debug("send [%s]", cmd);
-
+    _send(cmd, 0);
 }
 ////////////////////////////////////////////////////////////////////////
 
@@ -169,13 +184,13 @@ s8 wait_cmd_ok(u32 delay) // ms
 {
     if (delay == 0)
     {
-        delay = 60000 * 1000;
+        delay = 60 * 1000;
     }
 
     // wait
     {
         u32 cost = 0;
-        u32 period = 1000 * 1000;
+        u32 period = 1000;
         while (AT_STATE_RECV > curCommand->state)
         {
             if (cost < delay)
@@ -208,6 +223,12 @@ s8 wait_cmd_ok(u32 delay) // ms
 s8 _send(u8* cmd, u32 len)
 {
     s8 rc = 0;
+    if (NULL == cmd)
+    {
+        trace("try to send invalid data");
+        return -1;
+    }
+
     if (0 == len)
     {
         len = str_len(cmd);
@@ -229,7 +250,7 @@ s8 dial(u8* target, u32 port)
 {
     char cmd[50] = { 0 };
     curCommand = &AT_TABLE[AT_CMD_CIPSTART];
-    snprintf(cmd, 50, "%s\"TCP\",\"%s\",%d\r\n", curCommand->cmd, target, port);
+    snprintf(cmd, 50, "%s\"TCP\",\"%s\",%u\r\n", curCommand->cmd, target, port);
     return _send(cmd, 0);
 }
 

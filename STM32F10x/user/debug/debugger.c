@@ -16,6 +16,7 @@ SUPER_CMD_CALLBACK super_cb;
 static u8 super[256] = { 0 };
 void process(ring_cache* cache)
 {
+    ASSERT(NULL != cache, "invalid cache");
     u8* ptr = super;
     u32 len = 0;
     while (read_cache_char(cache, ptr) > 0)
@@ -37,19 +38,20 @@ void debug_irq_handler(void)
 
         if (0 != usart_is_ok(debugger, USART_IT_IDLE))
         {
-            debug("received msg, processing");
+            // receive command from computer
+            //debug("received msg, processing");
+            //led_twinkle(LED_A, GPIO_Pin_2, 2, 1000);
             if (NULL != super_cb)
             {
                 process(cache);
             }
-            debug("receive msg processed over");
+            //debug("receive msg processed over");
         }
     }
 
 //     if (0 != usart_is_ok(debugger, USART_IT_TC))
 //     {
-//         wait(1000);
-//         led_twinkle(LED_A, GPIO_Pin_2, 5, 1000);
+//         led_twinkle(LED_A, GPIO_Pin_2, 3, 1000);
 //     }
 }
 
@@ -58,6 +60,7 @@ void debug_handler(u8* data, u32 len)
     if (USART_INVALID != debugger)
     {
         usart_send_data(debugger, data, len);
+        //led_twinkle(LED_A, GPIO_Pin_2, 1, 1000);
     }
 }
 
