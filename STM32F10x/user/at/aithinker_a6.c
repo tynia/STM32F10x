@@ -69,29 +69,26 @@ static u8 a6 = USART_INVALID;
 void a6_irq_handler(void)
 {
     u8 r;
-    if (curCommand->state != AT_STATE_IDLE)
+    if (0 != usart_recv_data(a6, &r))
     {
-        if (0 != usart_recv_data(a6, &r))
+        if (curCommand->state != AT_STATE_SEND)
         {
-            if (curCommand->state != AT_STATE_SEND)
-            {
-                debug("%c", (u8)(r));
-            }
-            else
-            {
-                write_cache_char(cache, &r);
-            }
+            debug("%c", (u8)(r));
+        }
+        else
+        {
+            write_cache_char(cache, &r);
+        }
+    }
+
+    if (0 != usart_is_ok(a6, USART_IT_IDLE))
+    {
+        if (curCommand->state != AT_STATE_SEND)
+        {
+            curCommand->state = AT_STATE_RECV;
         }
 
-        if (0 != usart_is_ok(a6, USART_IT_IDLE))
-        {
-            if (curCommand->state != AT_STATE_SEND)
-            {
-                curCommand->state = AT_STATE_RECV;
-            }
-
-            led_twinkle(LED_A, GPIO_Pin_2, 2, 1000);
-        }
+        led_twinkle(LED_A, GPIO_Pin_2, 2, 1000);
     }
 
     if (0 != usart_is_ok(a6, USART_IT_TC))
@@ -160,7 +157,10 @@ void super_cmd_handler(u8* data, u32 len)
         cmd = "AT+CIFSR\r\n";
     }
     debug("send [%s]", cmd);
-    _send(cmd, 0);
+    if (_send(cmd, 0) < 0)
+    {
+        debug("command send time out, cmd: %s", cmd);
+    }
 }
 ////////////////////////////////////////////////////////////////////////
 
@@ -168,7 +168,7 @@ void a6_init(u8 idx, u16* irq)
 {
     ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
 
-    usart_init(idx, irq, 3, 3, a6_irq_handler);
+    usart_init(idx, 3, 3, irq, a6_irq_handler);
 #ifdef _DEBUG
     ring_cache_init("GPRS", cache, buffer, MAX_CACHE_SIZE);
 #else
@@ -233,6 +233,7 @@ s8 _send(u8* cmd, u32 len)
     {
         len = str_len(cmd);
     }
+    curCommand = &AT_TABLE[AT_CMD_CIPDATA];
     usart_send_data(a6, cmd, len);
     curCommand->state = AT_STATE_SEND; // begin to send
     rc = wait_cmd_ok(0);
@@ -288,7 +289,6 @@ s8 send_data(u8* data, u32 len)
         return r;
     }
     // data to send
-    curCommand = &AT_TABLE[AT_CMD_CIPDATA];
     r = _send(data, len);
     if (r < 0)
     {

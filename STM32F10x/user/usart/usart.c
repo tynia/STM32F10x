@@ -47,7 +47,7 @@ static tagUSART USARTGroup[USART_COM_COUNT] = {
       0, GPIO_PartialRemap_USART3, RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, RCC_APB1Periph_USART3, USART3 }
 };
 
-void usart_init(tagEUSART idx, u16* irq, u8 priority, u8 sub_priority, IRQ_CALLBACK_FUNC func)
+void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, IRQ_CALLBACK_FUNC func)
 {
     USART_InitTypeDef USART_InitStruct;
 

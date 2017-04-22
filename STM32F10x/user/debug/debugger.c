@@ -16,9 +16,9 @@ SUPER_CMD_CALLBACK super_cb;
 static u8 super[256] = { 0 };
 void process(ring_cache* cache)
 {
-    ASSERT(NULL != cache, "invalid cache");
     u8* ptr = super;
     u32 len = 0;
+    ASSERT(NULL != cache, "invalid cache");
     while (read_cache_char(cache, ptr) > 0)
     {
         ++ptr;
@@ -29,7 +29,7 @@ void process(ring_cache* cache)
 }
 
 //////////////////////////////////////////////////////////////////////
-void debug_irq_handler(void)
+void super_debug(void)
 {
     u8 r;
     if (0 != usart_recv_data(debugger, &r))
@@ -65,13 +65,13 @@ void debug_handler(u8* data, u32 len)
 }
 
 ///////////////////////////////////////////////////////
-void debugger_init(u8 idx, u16* irq)
+void debugger_init(u8 idx)
 {
     ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
 
-    usart_init(idx, irq, 3, 3, debug_irq_handler);
+    usart_init(idx, NULL, 3, 3, NULL);
 #ifdef _DEBUG
-    ring_cache_init("DEBUG", cache, buffer, MAX_CACHE_SIZE);
+    ring_cache_init("DEBUGGER", cache, buffer, MAX_CACHE_SIZE);
 #else
     ring_cache_init(cache, buffer, MAX_CACHE_SIZE);
 #endif
@@ -81,10 +81,17 @@ void debugger_init(u8 idx, u16* irq)
 
 void set_debugger_acceptor(u8 idx)
 {
-    acceptor = idx;
+    ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
+    if (idx >= 0 && idx < USART_COM_COUNT)
+    {
+        acceptor = idx;
+    }
 }
 
 void set_super_cmd_handler(SUPER_CMD_CALLBACK func)
 {
-    super_cb = func;
+    if (NULL != func)
+    {
+        super_cb = func;
+    }
 }

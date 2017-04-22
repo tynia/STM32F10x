@@ -9,12 +9,13 @@
 
 int main(void)
 {
-    u16 irq[2];
+    u16 irq[3];
     //SystemInit();
     irq[0] = USART_IT_IDLE;
     irq[1] = USART_IT_RXNE;
+    irq[1] = USART_IT_TC;
     // init debugger
-    debugger_init(USART_COM_4, irq);
+    debugger_init(USART_COM_4);
     // init led
     led_init(GPIO_A, GPIO_Pin_2);
     // init a6
@@ -22,7 +23,8 @@ int main(void)
     
     while (1)
     {
-        led_twinkle(LED_A, GPIO_Pin_2, 5, 0);
+        super_debug();
+        wait(0);
     }
     
     return 0;

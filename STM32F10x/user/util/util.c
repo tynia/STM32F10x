@@ -80,6 +80,11 @@ void uitoa(u32 i, u8* a)
 
 void zero(u8* buffer, u32 len)
 {
+    if (NULL == buffer)
+    {
+        return;
+    }
+
     u32 i = 0;
     for (; i < len; ++i)
     {
