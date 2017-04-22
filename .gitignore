@@ -10,7 +10,7 @@
 *.user
 *.filters
 *.suo
-*.db
+*.VC.db
 
 # Precompiled Headers
 *.gch
