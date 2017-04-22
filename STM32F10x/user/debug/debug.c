@@ -1,4 +1,5 @@
 #include "debug.h"
+#include "util/util.h"
 
 #define TRACE_BUFFER_SIZE 256
 #define DEBUG_BUFFER_SIZE 512
@@ -17,28 +18,29 @@ void panic()
 }
 #endif
 
-static u8 debug_buffer[DEBUG_BUFFER_SIZE];
-static u8 trace_buffer[TRACE_BUFFER_SIZE];
+static char debug_buffer[DEBUG_BUFFER_SIZE];
+static char trace_buffer[TRACE_BUFFER_SIZE];
 static u8* traceInfo = "[File:%32s Line:%d Func:%32s] Msg:\r\n%s\r\n";
-void debug(u8* fmt, ...)
+void debug(const char* fmt, ...)
 {
     if (NULL != cb)
     {
         va_list args;
+        u32 len = 0;
         va_start(args, fmt);
         vsnprintf(debug_buffer, DEBUG_BUFFER_SIZE, fmt, args);
         va_end(args);
-        u32 len = str_len(debug_buffer);
+        len = str_len(debug_buffer);
         cb(debug_buffer, len);
     }
 }
 
-void wrap_trace(u8* file, u32 line, u8* func, u8* fmt, ...)
+void wrap_trace(const char* file, u32 line, const char* func, const char* fmt, ...)
 {
     if (NULL != cb)
     {
-        zero(trace_buffer, TRACE_BUFFER_SIZE);
         va_list args;
+        zero(trace_buffer, TRACE_BUFFER_SIZE);
         va_start(args, fmt);
         vsnprintf(trace_buffer, TRACE_BUFFER_SIZE, fmt, args);
         va_end(args);

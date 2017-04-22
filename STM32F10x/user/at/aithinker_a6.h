@@ -20,10 +20,10 @@ enum
 };
 
 void a6_init(u8 idx, u16* irq);
-u8 wait_cmd_ok(u32 delay);
-u8 dial(u8* target, u32 port);
-u8 send_data(u8* data, u32 len);
-u8 close();
-u8 send_cmd(u8* cmd);
+s8 wait_cmd_ok(u32 delay);
+s8 dial(u8* target, u32 port);
+s8 send_data(u8* data, u32 len);
+s8 close(void);
 
+void send_cmd(u8* cmd);
 #endif

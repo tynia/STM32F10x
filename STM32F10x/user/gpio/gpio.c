@@ -1,12 +1,13 @@
 #include "gpio.h"
 #include "util/util.h"
+#include "debug/debug.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
 
 typedef struct _tag_gpio_group
 {
     u32 gpio_periph;
-    GPIO_InitTypeDef* gpiox;
+    GPIO_TypeDef* gpiox;
 } tag_gpio_group;
 
 static tag_gpio_group GPIOGroup[GPIO_COUNT] = {
@@ -21,12 +22,12 @@ static tag_gpio_group GPIOGroup[GPIO_COUNT] = {
 
 void gpio_init(u8 idx, u16 pinx, u8 mode, u8 speed)
 {
+    GPIO_InitTypeDef gpio_init_struct;
     ASSERT((idx >= 0 && idx < GPIO_COUNT), "invalid GPIO idx");
     RCC_APB2PeriphClockCmd(GPIOGroup[idx].gpio_periph, ENABLE);
-    GPIO_InitTypeDef gpio_init_struct;
     gpio_init_struct.GPIO_Pin = pinx;
-    gpio_init_struct.GPIO_Mode = mode;
-    gpio_init_struct.GPIO_Speed = speed;
+    gpio_init_struct.GPIO_Mode = (GPIOMode_TypeDef)mode;
+    gpio_init_struct.GPIO_Speed = (GPIOSpeed_TypeDef)speed;
     GPIO_Init(GPIOGroup[idx].gpiox, &gpio_init_struct);
 }
 

@@ -20,6 +20,8 @@ enum
     USART_COM_COUNT
 };
 
+#define USART_INVALID 0xEF
+
 void usart_init(u8 idx, u16* irp, u8 priority, u8 sub_priority, IRQ_CALLBACK_FUNC func);
 
 void usart_send_data(u8 idx, u8* data, u32 len);

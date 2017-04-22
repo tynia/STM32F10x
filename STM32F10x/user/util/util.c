@@ -1,5 +1,5 @@
 #include "util.h"
-#include <vadefs.h>
+#include <stdio.h>
 
 void wait(u32 clock_cycle) // ms
 {
@@ -13,10 +13,12 @@ void wait(u32 clock_cycle) // ms
 
 u8  str_cmp(u8* src, u8* dst, u32 len)
 {
-    ASSERT(NULL != src, "invalid source string");
-    ASSERT(NULL != dst, "invalid destination string");
-
     u32 i = 0;
+    if (NULL == src || NULL == dst)
+    {
+        return -0;
+    }
+
     while (i < len)
     {
         if (*(src + i) == 0 || *(dst + i) == 0 || *(src + i) != *(dst + i))
@@ -31,9 +33,12 @@ u8  str_cmp(u8* src, u8* dst, u32 len)
 
 u32 str_len(u8* str)
 {
-    ASSERT(NULL != str, "invalid string");
-
     u32 i = 0;
+    if (NULL == str)
+    {
+        return 0;
+    }
+    
     while (*str)
     {
         ++i;
@@ -50,10 +55,13 @@ u8 mod(u32 i)
 
 void uitoa(u32 i, u8* a)
 {
-    // the buffer size of a is no than 12
-    ASSERT(NULL != a, "NULL buffer for itoa");
     u8 power = 1;
     u32 r = i;
+    // the buffer size of a is no than 12
+    if (NULL == a)
+    {
+        return;
+    }
     while (r > 10)
     {
         power *= 10;
@@ -72,7 +80,7 @@ void uitoa(u32 i, u8* a)
 void zero(u8* buffer, u32 len)
 {
     u32 i = 0;
-    for (; l < len; ++i)
+    for (; i < len; ++i)
     {
         *(buffer + i) = 0;
     }

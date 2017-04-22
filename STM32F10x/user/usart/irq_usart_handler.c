@@ -1,4 +1,5 @@
 #include "irq_usart_handler.h"
+#include "debug/debug.h"
 
 enum
 {
@@ -20,7 +21,7 @@ void set_irq_handler(u8 idx, IRQ_CALLBACK_FUNC func)
 
 void USART1_IRQHandler(void)
 {
-    if (NULL != irq[USART_IRQ_1])
+    if (0 != irq[USART_IRQ_1])
     {
         irq[USART_IRQ_1]();
     }
@@ -28,7 +29,7 @@ void USART1_IRQHandler(void)
 
 void USART2_IRQHandler(void)
 {
-    if (NULL != irq[USART_IRQ_2])
+    if (0 != irq[USART_IRQ_2])
     {
         irq[USART_IRQ_2]();
     }
@@ -36,7 +37,7 @@ void USART2_IRQHandler(void)
 
 void USART3_IRQHandler(void)
 {
-    if (NULL != irq[USART_IRQ_3])
+    if (0 != irq[USART_IRQ_3])
     {
         irq[USART_IRQ_3]();
     }
@@ -44,7 +45,7 @@ void USART3_IRQHandler(void)
 
 void USART4_IRQHandler(void)
 {
-    if (NULL != irq[USART_IRQ_4])
+    if (0 != irq[USART_IRQ_4])
     {
         irq[USART_IRQ_5]();
     }
@@ -52,7 +53,7 @@ void USART4_IRQHandler(void)
 
 void USART5_IRQHandler(void)
 {
-    if (NULL != irq[USART_IRQ_5])
+    if (0 != irq[USART_IRQ_5])
     {
         irq[USART_IRQ_5]();
     }

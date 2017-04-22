@@ -5,6 +5,8 @@
 #include "led/led.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_usart.h"
+#include "debug/debugger.h"
+#include "debug/debug.h"
 
 enum
 {
@@ -27,10 +29,25 @@ typedef struct _tag_command
     u8* err;
 } tag_command;
 
-static u8 buffer[MAX_CACHE_SIZE];
-static ring_cache* cache;
-static u8 a6 = USART_COM_INVALID;
+static tag_command AT_TABLE[] = {
+    { AT_CMD_NONE,         AT_STATE_IDLE, 0,                  "OK",       0      },
+    { AT_CMD_CCID,         AT_STATE_IDLE, "AT+CCID\r\n",      "+SCID:",   "+CME" },
+    { AT_CMD_CREG,         AT_STATE_IDLE, "AT+CREG=1\r\n",    "+CREG:",   "+CME" },
+    { AT_CMD_CGATT,        AT_STATE_IDLE, "AT+CGATT=1\r\n",   "OK",       "+CME" },
+    { AT_CMD_CGACT,        AT_STATE_IDLE, "AT+CGACT=1,1\r\n", "OK",       "+CME" },
+    { AT_CMD_CSQ,          AT_STATE_IDLE, "AT+CSQ\r\n",       "+CSQ:",    "+CME" },
+    { AT_CMD_CIPSTART,     AT_STATE_IDLE, "AT+CIPSTART=",     "OK",       "+CME" },
+    { AT_CMD_CIPSEND,      AT_STATE_IDLE, "AT+CIPSEND\r\n",   ">",        "+CME" },
+    { AT_CMD_CIPDATA,      AT_STATE_IDLE, 0,                  0,          "+CME" },
+    { AT_CMD_CIPDATA_DONE, AT_STATE_IDLE, 0,                  "+CIPRCV:", "+CME" },
+    { AT_CMD_CIPCLOSE,     AT_STATE_IDLE, "AT+CIPCLOSE\r\n",  "OK",       "+CME" },
+    { AT_CMD_CUSTOM,       AT_STATE_IDLE, 0,                  0,          "+CME" } 
+};
+
 static tag_command* curCommand = &AT_TABLE[AT_CMD_NONE];
+static u8 buffer[MAX_CACHE_SIZE];
+static ring_cache* cache = 0;
+static u8 a6 = USART_INVALID;
 
 //////////////////////////////////////////////////////////////////////
 void a6_irq_handler(void)
@@ -46,7 +63,7 @@ void a6_irq_handler(void)
             }
             else
             {
-                write_cache_char(cache, r);
+                write_cache_char(cache, &r);
             }
         }
 
@@ -56,15 +73,81 @@ void a6_irq_handler(void)
             {
                 curCommand->state = AT_STATE_RECV;
             }
+
+            //led_twinkle(LED_A, GPIO_Pin_2, 1, 500);
         }
     }
 
     if (0 != usart_is_ok(a6, USART_IT_TC))
     {
         wait(2000);
-        led_twinkle(LED_A, GPIO_Pin_2, 3, 2000);
+        //led_twinkle(LED_A, GPIO_Pin_2, 3, 2000);
     }
 }
+
+void super_cmd_handler(u8* data, u32 len)
+{
+    u8* ptr = data;
+    u8* cmd = NULL;
+    ASSERT(NULL != data, "invalid data received from debugger");
+    if ('$' != *ptr)
+    {
+        debug("not an valid super command, should start with \"$\", cmd: %s", data);
+        return;
+    }
+
+    ++ptr;
+    if ('0' > *ptr || '9' < *ptr)
+    {
+        debug("not an valid super command, must be 0-9, cmd: %s", data);
+        return;
+    }
+
+    if ('9' == *ptr && '$' == *(ptr + 1))
+    {
+        send_data(ptr + 3, len - 3);
+    }
+
+    if ('0' == *ptr && '$' == *(ptr + 1))
+    {
+        cmd = "AT\r\n";
+    }
+    else if ('1' == *ptr && '$' == *(ptr + 1))
+    {
+        cmd = "AT+CCID\r\n";
+    }
+    else if ('2' == *ptr && '$' == *(ptr + 1))
+    {
+        cmd = "AT+CREG?\r\n";
+    }
+    else if('3' == *ptr && '$' == *(ptr + 1))
+    {
+        cmd = "AT+CSQ\r\n";
+    }
+    else if ('4' == *ptr && '$' == *(ptr + 1))
+    {
+        cmd = "AT+CIPSTART=\"TCP\",\"123.58.34.241\",2000\r\n";
+    }
+    else if ('5' == *ptr && '$' == *(ptr + 1))
+    {
+        cmd = data;
+    }
+    else if ('6' == *ptr && '$' == *(ptr + 1))
+    {
+        cmd = "AT+CIPCLOSE\r\n";
+    }
+    else if ('7' == *ptr && '$' == *(ptr + 1))
+    {
+        cmd = "AT+CIPSTATUS\r\n";
+    }
+    else if ('8' == *ptr && '$' == *(ptr + 1))
+    {
+        cmd = "AT+CIFSR\r\n";
+    }
+    debug("send [%s]", cmd);
+
+}
+////////////////////////////////////////////////////////////////////////
 
 void a6_init(u8 idx, u16* irq)
 {
@@ -78,27 +161,9 @@ void a6_init(u8 idx, u16* irq)
 #endif
     a6 = idx;
     // pass it to debugger
-    set_usart_acceptor(a6);
+    set_debugger_acceptor(a6);
+    set_super_cmd_handler(super_cmd_handler);
 }
-
-static tag_command AT_TABLE[] = {
-    { AT_CMD_NONE,         AT_STATE_IDLE, NULL,               "OK",       NULL   },
-    { AT_CMD_CCID,         AT_STATE_IDLE, "AT+CCID\r\n",      "+SCID:",   "+CME" },
-    { AT_CMD_CREG,         AT_STATE_IDLE, "AT+CREG=1\r\n",    "+CREG:",   "+CME" },
-    { AT_CMD_CGATT,        AT_STATE_IDLE, "AT+CGATT=1\r\n",   "OK",       "+CME" },
-    { AT_CMD_CGACT,        AT_STATE_IDLE, "AT+CGACT=1,1\r\n", "OK",       "+CME" },
-    { AT_CMD_CSQ,          AT_STATE_IDLE, "AT+CSQ\r\n",       "+CSQ:",    "+CME" },
-    { AT_CMD_CIPSTART,     AT_STATE_IDLE, "AT+CIPSTART=",     "OK",       "+CME" },
-    { AT_CMD_CIPSEND,      AT_STATE_IDLE, "AT+CIPSEND\r\n",   ">",        "+CME" },
-    { AT_CMD_CIPDATA,      AT_STATE_IDLE, NULL,               NULL,       "+CME" },
-    { AT_CMD_CIPDATA_DONE, AT_STATE_IDLE, NULL,               "+CIPRCV:", "+CME" },
-    { AT_CMD_CIPCLOSE,     AT_STATE_IDLE, "AT+CIPCLOSE\r\n",  "OK",       "+CME" },
-    { AT_CMD_CUSTOM,       AT_STATE_IDLE, NULL,               NULL,       "+CME" } 
-};
-
-u8 addr[] = { "\"TCP\",\"255.255.255.255\",00000" };
-u8 ips = 7;
-u8 ps = 24;
 
 s8 wait_cmd_ok(u32 delay) // ms
 {
@@ -128,7 +193,7 @@ s8 wait_cmd_ok(u32 delay) // ms
 
     curCommand->state = AT_STATE_IDLE;
 
-    if (NULL != curCommand->ok)
+    if (0 != curCommand->ok)
     {
         if (cache_find_string(cache, curCommand->ok)> 0)
         {
@@ -140,43 +205,43 @@ s8 wait_cmd_ok(u32 delay) // ms
     return 0;
 }
 
-u8 dial(u8* target, u32 port)
-{
-    curCommand = &AT_TABLE[AT_CMD_CIPSTART];
-    u8 cmd[50] = { 0 };
-    vsprintf_s(cmd, "%s\"TCP\",\"%s\",%d", curCommand->cmd, target, port);
-    _send(cmd, 0);
-}
-
-void _begin()
-{
-    curCommand = &AT_TABLE[AT_CMD_CIPSEND];
-    u8* cmd = curCommand->cmd;
-    s8 rc = _send(cmd, 0);
-    if (rc < 0)
-    {
-        debug("%s timeout", curCommand->cmd);
-        mark_read(cache);
-    }
-}
-
 s8 _send(u8* cmd, u32 len)
 {
+    s8 rc = 0;
     if (0 == len)
     {
         len = str_len(cmd);
     }
     usart_send_data(a6, cmd, len);
     curCommand->state = AT_STATE_SEND; // begin to send
-    u8 rc = wait_cmd_ok(0);
-    if ( rc < 0)
+    rc = wait_cmd_ok(0);
+    if (rc < 0)
     {
         trace("wait response time out, cmd: %s, id: %d", cmd, curCommand->id);
         mark_read(cache);
+        return rc;
     }
+
+    return 0;
 }
 
-void _end()
+s8 dial(u8* target, u32 port)
+{
+    char cmd[50] = { 0 };
+    curCommand = &AT_TABLE[AT_CMD_CIPSTART];
+    snprintf(cmd, 50, "%s\"TCP\",\"%s\",%d\r\n", curCommand->cmd, target, port);
+    return _send(cmd, 0);
+}
+
+s8 _begin()
+{
+    u8* cmd = NULL;
+    curCommand = &AT_TABLE[AT_CMD_CIPSEND];
+    cmd = curCommand->cmd;
+    return _send(cmd, 0);
+}
+
+s8 _end()
 {
     u8 cmd[2];
     cmd[0] = 0x1A;
@@ -184,56 +249,62 @@ void _end()
     curCommand = &AT_TABLE[AT_CMD_CIPDATA_DONE];
     if (_send(cmd, 1) < 0)
     {
-        debug("command timeout");
-        //mark_read(cache);
+        trace("command timeout");
+        return -1;
     }
     //TODO: handler response
+    return 0;
 }
 
-u8 send_data(u8* data, u32 len)
+s8 send_data(u8* data, u32 len)
 {
+    s8 r = 0;
     // send at command
-    _begin();
-    // data to send
-    curCommand = &AT_TABLE[AT_CMD_CIPDATA];
-    _send(data, len);
-    // send done char
-    _end();
-}
-
-u8 close()
-{
-    curCommand = &AT_TABLE[AT_CMD_CIPCLOSE];
-    u8* cmd = curCommand->cmd;
-    u32 len = str_len(cmd);
-    _send(cmd, len);
-}
-
-u8 send_cmd(u8* cmd)
-{
-    curCommand = &AT_TABLE[AT_CMD_CUSTOM];
-    curCommand->ok = NULL;
-    u32 len = str_len(cmd);
-    u8 r = 0;
-    if (cmd[len -1] == '\n' && cmd[len - 2] == '\r')
-    {
-        r = _send(cmd, len);
-    }
-    else
-    {
-        ASSERT(len < CUSTOM_CMD_SIZE - 2, "cmd len is larger than %d", CUSTOM_CMD_SIZE);
-        u8* data[CUSTOM_CMD_SIZE];
-        vsprintf_s(data, "%s\r\n", cmd);
-        r = _send(data, len + 2);
-    }
-
+    r = _begin();
     if (r < 0)
     {
-        debug("command: %s timeout", cmd);
+        trace("command time out");
+        return r;
+    }
+    // data to send
+    curCommand = &AT_TABLE[AT_CMD_CIPDATA];
+    r = _send(data, len);
+    if (r < 0)
+    {
+        trace("send user data time out, data: %s", data);
+        return r;
+    }
+    // send done char
+    r = _end();
+    if (r < 0)
+    {
+        trace("send command 0x1A response timeout");
+        return r;
     }
 
-    // clear custom command
-    curCommand->state = AT_STATE_IDLE;
+    return 0;
+}
 
-    return w;
+s8 close()
+{
+    u8* cmd = NULL;
+    u32 len = 0;
+    curCommand = &AT_TABLE[AT_CMD_CIPCLOSE];
+    cmd = curCommand->cmd;
+    len = str_len(cmd);
+    return _send(cmd, len);
+}
+
+void send_cmd(u8* cmd)
+{
+    u32 len = str_len(cmd);
+    s8 r = 0;
+    ASSERT(NULL != cmd, "invalid cmd in");
+    curCommand = &AT_TABLE[AT_CMD_CUSTOM];
+    curCommand->ok = 0;
+    r = _send(cmd, len);
+    if (r < 0)
+    {
+        trace("command: %s timeout", cmd);
+    }
 }

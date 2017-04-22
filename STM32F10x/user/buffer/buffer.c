@@ -1,10 +1,11 @@
 #include "buffer/buffer.h"
 #include "util/util.h"
+#include "debug/debug.h"
 
 #ifdef _DEBUG
-u8 ring_cache_init(u8* id, ring_cache* cache, u8* buffer, u32 size)
+void ring_cache_init(u8* id, ring_cache* cache, u8* buffer, u32 size)
 #else
-u8 ring_cache_init(ring_cache* cache, u8* buffer, u32 size)
+void ring_cache_init(ring_cache* cache, u8* buffer, u32 size)
 #endif
 {
 #ifdef _DEBUG
@@ -18,6 +19,7 @@ u8 ring_cache_init(ring_cache* cache, u8* buffer, u32 size)
 
 s8 zero_cache(ring_cache* cache)
 {
+    u8* ptr = 0;
     if (NULL == cache)
     {
         trace("cache is uninitialized");
@@ -30,7 +32,7 @@ s8 zero_cache(ring_cache* cache)
         return -1;
     }
 
-    u8* ptr = cache->ptr;
+    ptr = cache->ptr;
     for (; ptr < cache->ptr + cache->capacity; ++ptr)
     {
         *ptr = 0;
@@ -85,6 +87,8 @@ s8 cache_is_full(ring_cache* cache)
 
 s32 write_cache(ring_cache* cache, u8* data, u16 len)
 {
+    u32 rest = 0;
+    u16 wlen = 0;
     if (NULL == cache)
     {
         trace("cache is uninitialized");
@@ -108,8 +112,7 @@ s32 write_cache(ring_cache* cache, u8* data, u16 len)
         trace("cache is full");
         return 0;
     }
-
-    u32 rest = 0;
+    
     if (cache->head == cache->tail)
     {
         rest = cache->capacity;
@@ -129,7 +132,7 @@ s32 write_cache(ring_cache* cache, u8* data, u16 len)
     }
 
     trace("the rest size of cache is %d", rest);
-    u16 wlen = 0;
+
     // head is in front of the tail
     if (cache->tail <= cache->head)
     {
@@ -286,6 +289,9 @@ u8 read_cache_char_not_safe(ring_cache* cache, u8* c)
 
 s8 cache_find_string(ring_cache* cache, u8* dst)
 {
+    u32 i = 0;
+    u8* ptr = cache->tail;
+
     if (NULL == cache)
     {
         trace("cache is uninitialized");
@@ -303,8 +309,6 @@ s8 cache_find_string(ring_cache* cache, u8* dst)
         return -1;
     }
 
-    u32 i = 0;
-    u8* ptr = cache->tail;
     for (; ptr != cache->head; ++ptr)
     {
         if (ptr >= cache->ptr + cache->capacity)

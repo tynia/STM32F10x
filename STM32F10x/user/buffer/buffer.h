@@ -17,9 +17,9 @@ typedef struct
 } ring_cache;
 
 #ifdef _DEBUG
-u8 ring_cache_init(u8* id, ring_cache* cache, u8* buffer, u32 size);
+void ring_cache_init(u8* id, ring_cache* cache, u8* buffer, u32 size);
 #else
-u8 ring_cache_init(ring_cache* cache, u8* buffer, u32 size);
+void ring_cache_init(ring_cache* cache, u8* buffer, u32 size);
 #endif
 s8 zero_cache(ring_cache* cache);
 s8 cache_is_empty(ring_cache* cache);

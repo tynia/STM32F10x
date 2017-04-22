@@ -1,11 +1,15 @@
 #include "usart/usart.h"
 #include "gpio/gpio.h"
 #include "buffer/buffer.h"
+#include "nvic/nvic.h"
+#include "rcc/rcc.h"
+#include "debug/debug.h"
+#include "led/led.h"
+#include "util/util.h"
 #include "misc.h"
 #include "stm32f10x_usart.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
-
 
 typedef struct _tag_usart_group
 {
@@ -46,8 +50,10 @@ static tag_usart_group USARTGroup[USART_COM_COUNT] = {
 
 void usart_init(u8 idx, u16* irq, u8 priority, u8 sub_priority, IRQ_CALLBACK_FUNC func)
 {
+    USART_InitTypeDef usart_init_struct;
+    
     ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
-    ASSERT((NULL != irq), "invalid IRQ for usart");
+    ASSERT((0 != irq), "invalid IRQ for usart");
 
     // CLOCK
     rcc_set_clock(USARTGroup[idx].SelfRcc, ENABLE);
@@ -64,7 +70,6 @@ void usart_init(u8 idx, u16* irq, u8 priority, u8 sub_priority, IRQ_CALLBACK_FUN
     gpio_init(USARTGroup[idx].GPIORx, USARTGroup[idx].Rx, GPIO_Mode_IN_FLOATING, GPIO_Speed_50MHz);
 
     // USART
-    USART_InitTypeDef usart_init_struct;
     usart_init_struct.USART_BaudRate = 115200;
     usart_init_struct.USART_WordLength = USART_WordLength_8b;
     usart_init_struct.USART_StopBits = USART_StopBits_1;
@@ -104,6 +109,9 @@ void usart_send_data(u8 idx, u8* data, u32 len)
         USART_SendData(USARTGroup[idx].USARTx, *data++);
         while (USART_GetFlagStatus(USARTGroup[idx].USARTx, USART_FLAG_TXE) == RESET);
     }
+
+    wait(1000);
+    //led_twinkle(LED_A, GPIO_Pin_2, 5, 500);
 }
 
 u8 usart_recv_data(u8 idx, u8* c)
