@@ -9,6 +9,7 @@
 
 int main(void)
 {
+    u8 i = 0;
     u16 irq[3];
     //SystemInit();
     irq[0] = USART_IT_IDLE;
@@ -21,8 +22,10 @@ int main(void)
     // init a6
     a6_init(USART_COM_4, irq, 2);
     
-    //while (0 != a6_is_ready());
-    wait(50000);
+    while (i < 50)
+    {
+        wait(1000);
+    }
     while (1)
     {
         super_debug();

@@ -31,7 +31,7 @@ void debug(const char* fmt, ...)
         vsnprintf(debug_buffer, DEBUG_BUFFER_SIZE, fmt, args);
         va_end(args);
         len = str_len(debug_buffer);
-#ifdef
+#ifdef _DEBUG
         cb(debug_buffer, len);
 #endif
     }

@@ -65,7 +65,7 @@ static u8 buffer[MAX_CACHE_SIZE];
 static ring_cache rcache;
 static ring_cache* cache = &rcache;
 static u8 a6 = USART_INVALID;
-
+u16 USART_RX_STA = 0;
 s8 _send(u8* cmd, u32 len);
 
 //////////////////////////////////////////////////////////////////////
@@ -80,7 +80,33 @@ void a6_irq_handler(void)
         }
         else
         {
-            write_cache_char(cache, &r);
+            if ((USART_RX_STA & 0x8000) == 0)
+            {
+                if (USART_RX_STA & 0x4000)
+                {
+                    if (r != 0x0a)
+                    {
+                        USART_RX_STA = 0;
+                    }
+                    else
+                    {
+                        USART_RX_STA |= 0x8000;
+                    }
+                }
+                else
+                {
+                    if (r == 0x0d)
+                    {
+                        USART_RX_STA |= 0x4000;
+                    }
+                    else
+                    {
+                        write_cache_char(cache, &r);
+                        USART_RX_STA++;
+                    }
+                }
+
+            }
         }
     }
 
@@ -159,7 +185,7 @@ void super_cmd_handler(u8* data, u32 len)
     {
         cmd = "AT+CIFSR\r\n";
     }
-    debug("send [%s]", cmd);
+    debugc("send [%s]", cmd);
     if (_send(cmd, 0) < 0)
     {
         debug("command send time out, cmd: %s", cmd);
