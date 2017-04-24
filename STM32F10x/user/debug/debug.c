@@ -1,66 +1,32 @@
 #include "debug.h"
 #include "util/util.h"
 
-#define TRACE_BUFFER_SIZE 256
-#define DEBUG_BUFFER_SIZE 512
-
-DEBUG_CALLBACK cb = NULL;
-
-void set_debug_handler(DEBUG_CALLBACK callback)
+DEBUG_CALLBACK debug_cb = NULL;
+DEBUG_CALLBACK set_debug_data_handler(DEBUG_CALLBACK callback)
 {
-    cb = callback;
+    DEBUG_CALLBACK old = debug_cb;
+    debug_cb = callback;
+    return old;
 }
-/////////////////////////////////////////////////
-#ifdef _DEBUG
+
 void panic()
 {
+    console("hit fatal error, pause");
     __asm int 3;
 }
-#endif
 
-static char debug_buffer[DEBUG_BUFFER_SIZE];
-static char trace_buffer[TRACE_BUFFER_SIZE];
-static u8* traceInfo = "[File:%32s Line:%d Func:%32s] Msg:\r\n%s\r\n";
-void debug(const char* fmt, ...)
+#define CONSOLE_BUFFER_SIZE 256
+static char buffer[CONSOLE_BUFFER_SIZE];
+void console(const char* fmt, ...)
 {
-    if (NULL != cb)
+    if (NULL != debug_cb)
     {
         va_list args;
         u32 len = 0;
         va_start(args, fmt);
-        vsnprintf(debug_buffer, DEBUG_BUFFER_SIZE, fmt, args);
+        vsnprintf(buffer, CONSOLE_BUFFER_SIZE, fmt, args);
         va_end(args);
-        len = str_len(debug_buffer);
-#ifdef _DEBUG
-        cb(debug_buffer, len);
-#endif
-    }
-}
-
-void debugc(const char* fmt, ...)
-{
-    if (NULL != cb)
-    {
-        va_list args;
-        u32 len = 0;
-        va_start(args, fmt);
-        vsnprintf(debug_buffer, DEBUG_BUFFER_SIZE, fmt, args);
-        va_end(args);
-        len = str_len(debug_buffer);
-        cb(debug_buffer, len);
-    }
-}
-
-void wrap_trace(const char* file, u32 line, const char* func, const char* fmt, ...)
-{
-    if (NULL != cb)
-    {
-        va_list args;
-        zero(trace_buffer, TRACE_BUFFER_SIZE);
-        va_start(args, fmt);
-        vsnprintf(trace_buffer, TRACE_BUFFER_SIZE, fmt, args);
-        va_end(args);
-
-        debug(traceInfo, file, line, func, trace_buffer);
+        len = str_len(buffer);
+        debug_cb(buffer, len);
     }
 }

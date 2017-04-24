@@ -5,7 +5,6 @@
 #include "led/led.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_usart.h"
-#include "debug/debugger.h"
 #include "debug/debug.h"
 
 enum
@@ -39,25 +38,24 @@ enum
 typedef struct _tagATCommand
 {
     u8 id;
-    u8 state;
     u8* cmd;
     u8* ok;
     u8* err;
 } tagATCommand;
 
 static tagATCommand AT_TABLE[] = {
-    { AT_CMD_NONE,         AT_STATE_IDLE, 0,                  "OK",       0      },
-    { AT_CMD_CCID,         AT_STATE_IDLE, "AT+CCID\r\n",      "+SCID:",   "+CME" },
-    { AT_CMD_CREG,         AT_STATE_IDLE, "AT+CREG=1\r\n",    "+CREG:",   "+CME" },
-    { AT_CMD_CGATT,        AT_STATE_IDLE, "AT+CGATT=1\r\n",   "OK",       "+CME" },
-    { AT_CMD_CGACT,        AT_STATE_IDLE, "AT+CGACT=1,1\r\n", "OK",       "+CME" },
-    { AT_CMD_CSQ,          AT_STATE_IDLE, "AT+CSQ\r\n",       "+CSQ:",    "+CME" },
-    { AT_CMD_CIPSTART,     AT_STATE_IDLE, "AT+CIPSTART=",     "OK",       "+CME" },
-    { AT_CMD_CIPSEND,      AT_STATE_IDLE, "AT+CIPSEND\r\n",   ">",        "+CME" },
-    { AT_CMD_CIPDATA,      AT_STATE_IDLE, 0,                  0,          "+CME" },
-    { AT_CMD_CIPDATA_DONE, AT_STATE_IDLE, 0,                  "+CIPRCV:", "+CME" },
-    { AT_CMD_CIPCLOSE,     AT_STATE_IDLE, "AT+CIPCLOSE\r\n",  "OK",       "+CME" },
-    { AT_CMD_CUSTOM,       AT_STATE_IDLE, 0,                  0,          "+CME" } 
+    { AT_CMD_NONE,         NULL,               "OK",       NULL },
+    { AT_CMD_CCID,         "AT+CCID\r\n",      "+SCID:",   "+CME" },
+    { AT_CMD_CREG,         "AT+CREG=1\r\n",    "+CREG:",   "+CME" },
+    { AT_CMD_CGATT,        "AT+CGATT=1\r\n",   "OK",       "+CME" },
+    { AT_CMD_CGACT,        "AT+CGACT=1,1\r\n", "OK",       "+CME" },
+    { AT_CMD_CSQ,          "AT+CSQ\r\n",       "+CSQ:",    "+CME" },
+    { AT_CMD_CIPSTART,     "AT+CIPSTART=",     "OK",       "+CME" },
+    { AT_CMD_CIPSEND,      "AT+CIPSEND\r\n",   ">",        "+CME" },
+    { AT_CMD_CIPDATA,      NULL,               NULL,       "+CME" },
+    { AT_CMD_CIPDATA_DONE, NULL,               "+CIPRCV:", "+CME" },
+    { AT_CMD_CIPCLOSE,     "AT+CIPCLOSE\r\n",  "OK",       "+CME" },
+    { AT_CMD_CUSTOM,       NULL,               NULL,       "+CME" }
 };
 
 static tagATCommand* curCommand = &AT_TABLE[AT_CMD_NONE];
@@ -65,7 +63,10 @@ static u8 buffer[MAX_CACHE_SIZE];
 static ring_cache rcache;
 static ring_cache* cache = &rcache;
 static u8 a6 = USART_INVALID;
-u16 USART_RX_STA = 0;
+static u8 ro = 0;
+static u8 a6_state = AT_STATE_IDLE;
+
+
 s8 _send(u8* cmd, u32 len);
 
 //////////////////////////////////////////////////////////////////////
@@ -74,50 +75,28 @@ void a6_irq_handler(void)
     u8 r;
     if (0 != usart_recv_data(a6, &r))
     {
-        if (curCommand->state != AT_STATE_SEND)
+        if (a6_state != AT_STATE_SEND)
         {
-            debug("%c", (u8)(r));
+            console("%c", (u8)(r));
         }
         else
         {
-            if ((USART_RX_STA & 0x8000) == 0)
+            if (r == 0x0D)
             {
-                if (USART_RX_STA & 0x4000)
-                {
-                    if (r != 0x0a)
-                    {
-                        USART_RX_STA = 0;
-                    }
-                    else
-                    {
-                        USART_RX_STA |= 0x8000;
-                    }
-                }
-                else
-                {
-                    if (r == 0x0d)
-                    {
-                        USART_RX_STA |= 0x4000;
-                    }
-                    else
-                    {
-                        write_cache_char(cache, &r);
-                        USART_RX_STA++;
-                    }
-                }
-
+                ro = 1;
+            }
+            else if (r == 0x0A)
+            {
+                ro = 0; // reset frame flag
+                led_twinkle(LED_A, GPIO_Pin_2, 2, 1000);
+                a6_state = AT_STATE_RECV;
+                // other will get the state and handle recv cache
+            }
+            else
+            {
+                write_cache_char(cache, &r);
             }
         }
-    }
-
-    if (0 != usart_is_ok(a6, USART_IT_IDLE))
-    {
-        if (curCommand->state == AT_STATE_SEND)
-        {
-            curCommand->state = AT_STATE_RECV;
-        }
-
-        led_twinkle(LED_A, GPIO_Pin_2, 2, 1000);
     }
 
     if (0 != usart_is_ok(a6, USART_IT_TC))
@@ -126,21 +105,21 @@ void a6_irq_handler(void)
     }
 }
 
-void super_cmd_handler(u8* data, u32 len)
+void exchange_data_handler(u8* data, u32 len)
 {
     u8* ptr = data;
     u8* cmd = NULL;
     ASSERT(NULL != data, "invalid data received from debugger");
     if ('$' != *ptr)
     {
-        debug("not an valid super command, should start with \"$\", cmd: %s", data);
+        console("not an valid super command, should start with \"$\", cmd: %s", data);
         return;
     }
 
     ++ptr;
     if ('0' > *ptr || '9' < *ptr)
     {
-        debug("not an valid super command, must be 0-9, cmd: %s", data);
+        console("not an valid super command, must be 0-9, cmd: %s", data);
         return;
     }
 
@@ -185,12 +164,13 @@ void super_cmd_handler(u8* data, u32 len)
     {
         cmd = "AT+CIFSR\r\n";
     }
-    debugc("send [%s]", cmd);
+    console("send [%s]", cmd);
     if (_send(cmd, 0) < 0)
     {
-        debug("command send time out, cmd: %s", cmd);
+        console("command send time out, cmd: %s", cmd);
     }
 }
+
 ////////////////////////////////////////////////////////////////////////
 
 void a6_init(u8 idx, u16* irq, u8 len)
@@ -198,27 +178,25 @@ void a6_init(u8 idx, u16* irq, u8 len)
     ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
 
     usart_init(idx, 3, 3, irq, len, a6_irq_handler);
-#ifdef _DEBUG
-    ring_cache_init("GPRS", cache, buffer, MAX_CACHE_SIZE);
-#else
     ring_cache_init(cache, buffer, MAX_CACHE_SIZE);
-#endif
     a6 = idx;
-    // pass it to debugger
-    set_debugger_acceptor(a6);
-    set_super_cmd_handler(super_cmd_handler);
+#ifdef _DEBUG
+    set_data_received_handler(exchange_data_handler);
+#else
+    set_data_exchange_handler(exchange_data_handler);
+#endif
 }
 
 u8 a6_is_ready()
 {
     u8 r = 0;
     curCommand = &AT_TABLE[AT_CMD_CREG];
-    curCommand->state = AT_STATE_SEND; // begin to send
-    r = wait_cmd_ok(0);
+    a6_state = AT_STATE_SEND; // begin to send
+    r = check(0);
     return r > 1 ? 1 : 0;
 }
 
-s8 wait_cmd_ok(u32 delay) // ms
+s8 check(u32 delay) // ms
 {
     if (delay == 0)
     {
@@ -229,7 +207,7 @@ s8 wait_cmd_ok(u32 delay) // ms
     {
         u32 cost = 0;
         u32 period = 1000;
-        while (AT_STATE_RECV > curCommand->state)
+        while (AT_STATE_RECV > a6_state)
         {
             if (cost < delay)
             {
@@ -238,13 +216,13 @@ s8 wait_cmd_ok(u32 delay) // ms
             }
             else
             {
-                trace("wait time out[at id: %d]", curCommand->id);
+                console("wait time out[at id: %d]", curCommand->id);
                 return -1;
             }
         }
     }
 
-    curCommand->state = AT_STATE_IDLE;
+    a6_state = AT_STATE_IDLE;
 
     if (0 != curCommand->ok)
     {
@@ -263,7 +241,7 @@ s8 _send(u8* cmd, u32 len)
     s8 rc = 0;
     if (NULL == cmd)
     {
-        trace("try to send invalid data");
+        console("try to send invalid data");
         return -1;
     }
 
@@ -273,12 +251,12 @@ s8 _send(u8* cmd, u32 len)
     }
     curCommand = &AT_TABLE[AT_CMD_CIPDATA];
     usart_send_data(a6, cmd, len);
-    curCommand->state = AT_STATE_SEND; // begin to send
-    rc = wait_cmd_ok(0);
+    a6_state = AT_STATE_SEND; // send over, change the state
+    rc = check(0);
     if (rc < 0)
     {
-        trace("wait response time out, cmd: %s, id: %d", cmd, curCommand->id);
-        mark_read(cache);
+        console("wait response time out, cmd: %s, id: %d", cmd, curCommand->id);
+        markr(cache);
         return rc;
     }
 
@@ -309,7 +287,7 @@ s8 _end()
     curCommand = &AT_TABLE[AT_CMD_CIPDATA_DONE];
     if (_send(cmd, 1) < 0)
     {
-        trace("command timeout");
+        console("command timeout");
         return -1;
     }
     //TODO: handler response
@@ -323,21 +301,21 @@ s8 send_data(u8* data, u32 len)
     r = _begin();
     if (r < 0)
     {
-        trace("command time out");
+        console("command time out");
         return r;
     }
     // data to send
     r = _send(data, len);
     if (r < 0)
     {
-        trace("send user data time out, data: %s", data);
+        console("send user data time out, data: %s", data);
         return r;
     }
     // send done char
     r = _end();
     if (r < 0)
     {
-        trace("send command 0x1A response timeout");
+        console("send command 0x1A response timeout");
         return r;
     }
 
@@ -364,6 +342,6 @@ void send_cmd(u8* cmd)
     r = _send(cmd, len);
     if (r < 0)
     {
-        trace("command: %s timeout", cmd);
+        console("command: %s timeout", cmd);
     }
 }

@@ -6,7 +6,6 @@
 
 typedef enum _tagEUSART
 {
-    USART_COM_INVALID = -1,
     USART_COM_1 = 0,
     USART_COM_2 = 1,
     USART_COM_3 = 2,

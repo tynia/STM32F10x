@@ -47,7 +47,8 @@
     <ClCompile Include="user\at\aithinker_a6.c" />
     <ClCompile Include="user\buffer\buffer.c" />
     <ClCompile Include="user\debug\debug.c" />
-    <ClCompile Include="user\debug\debugger.c" />
+    <ClCompile Include="user\debug\debugger.cpp" />
+    <ClCompile Include="user\exchange\exchanger.c" />
     <ClCompile Include="user\gpio\gpio.c" />
     <ClCompile Include="user\led\led.c" />
     <ClCompile Include="user\main.c" />
@@ -91,6 +92,7 @@
     <ClInclude Include="user\buffer\buffer.h" />
     <ClInclude Include="user\debug\debug.h" />
     <ClInclude Include="user\debug\debugger.h" />
+    <ClInclude Include="user\exchange\exchanger.h" />
     <ClInclude Include="user\gpio\gpio.h" />
     <ClInclude Include="user\led\led.h" />
     <ClInclude Include="user\nvic\nvic.h" />

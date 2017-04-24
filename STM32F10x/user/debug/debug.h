@@ -5,37 +5,20 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-typedef void (*DEBUG_CALLBACK)(u8* data, u32 len);
-void set_debug_handler(DEBUG_CALLBACK callback);
-#ifdef _DEBUG
+typedef void(*DEBUG_CALLBACK)(u8* data, u32 len);
+DEBUG_CALLBACK set_debug_data_handler(DEBUG_CALLBACK callback);
+
 void panic();
-#endif
+void console(const char* fmt, ...);
 
-void debug(const char* fmt, ...);
-void debugc(const char* fmt, ...);
-void wrap_trace(const char* file, u32 line, const char* func, const char* fmt, ...);
-
-#define trace(fmt, ...)                                                  \
-do                                                                       \
-{                                                                        \
-    wrap_trace(__FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);    \
+#define ASSERT(ok, fmt, ...)            \
+do                                      \
+{                                       \
+    if (!(ok))                          \
+    {                                   \
+        console(fmt, ##__VA_ARGS__);    \
+        panic();                        \
+    }                                   \
 } while (0)
-
-#ifdef _DEBUG
-#define ASSERT(ok, fmt, ...)                                             \
-do                                                                       \
-{                                                                        \
-    if (!(ok))                                                           \
-    {                                                                    \
-        wrap_trace(__FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);\
-        panic();                                                         \
-    }                                                                    \
-} while (0)
-#else
-#define ASSERT(ok, fmt, ...)                                             \
-do                                                                       \
-{                                                                        \
-} while (0)
-#endif // _DEBUG
 
 #endif

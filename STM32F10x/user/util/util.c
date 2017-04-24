@@ -1,18 +1,18 @@
 #include "util.h"
 #include <stdio.h>
 
-void wait(u32 clock_cycle) // ms
+void wait(u32 ms) // ms
 {
     u32 i = 0;
-    if (clock_cycle == 0) {
-        clock_cycle = LED_TWINKLE_DELAY * 1000;
+    if (ms == 0) {
+        ms = LED_TWINKLE_DELAY * 1000;
     }
     else
     {
-        clock_cycle = clock_cycle * 1000;
+        ms = ms * 1000;
     }
 
-    for (; i < clock_cycle; ++i);
+    for (; i < ms; ++i);
 }
 
 u8  str_cmp(u8* src, u8* dst, u32 len)
@@ -50,12 +50,6 @@ u32 str_len(u8* str)
     }
 
     return i;
-}
-
-u8 mod(u32 i)
-{
-    u8 m = i % 10;
-    return '0' + m;
 }
 
 void uitoa(u32 i, u8* a)

@@ -62,6 +62,19 @@ void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, u8 len, I
         GPIO_PinRemapConfig(USARTGroup[idx].ReMap, ENABLE);
     }
 
+    // NVIC
+    if (NULL != irq)
+    {
+        u8 i = 0;
+        while (i < len)
+        {
+            USART_ITConfig(USARTGroup[idx].USARTx, *(irq + i), ENABLE);
+            ++i;
+        }
+
+        nvic_init(USARTGroup[idx].IRQChannel, priority, sub_priority);
+    }
+
     // GPIO
     // TX
     gpio_init(USARTGroup[idx].GPIOTx, USARTGroup[idx].Tx, GPIO_Mode_AF_PP, GPIO_Speed_50MHz);
@@ -77,18 +90,6 @@ void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, u8 len, I
     USART_InitStruct.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
     USART_Init(USARTGroup[idx].USARTx, &USART_InitStruct);
     USART_Cmd(USARTGroup[idx].USARTx, ENABLE);
-
-    if (NULL != irq)
-    {
-        u8 i = 0;
-        while (i < len)
-        {
-            USART_ITConfig(USARTGroup[idx].USARTx, *(irq+i), ENABLE);
-            ++i;
-        }
-        // NVIC
-        nvic_init(USARTGroup[idx].IRQChannel, priority, sub_priority);
-    }
 
     if (NULL != func)
     {

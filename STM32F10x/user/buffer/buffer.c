@@ -2,15 +2,8 @@
 #include "util/util.h"
 #include "debug/debug.h"
 
-#ifdef _DEBUG
-void ring_cache_init(u8* id, ring_cache* cache, u8* buffer, u32 size)
-#else
 void ring_cache_init(ring_cache* cache, u8* buffer, u32 size)
-#endif
 {
-#ifdef _DEBUG
-    cache->id = id;
-#endif
     cache->ptr = buffer;
     cache->head = buffer;
     cache->tail = buffer;
@@ -334,7 +327,30 @@ s8 cache_find_string(ring_cache* cache, u8* dst)
     return 0;
 }
 
-void mark_read(ring_cache* cache)
+void markr(ring_cache* cache)
 {
     cache->tail = cache->head;
+}
+
+u32 fetch_len(ring_cache* cache)
+{
+    u32 i = 0;
+    u8* ptr = NULL;
+    if (NULL == cache)
+    {
+        return 0;
+    }
+
+    ptr = cache->tail;
+    while (ptr != cache->head)
+    {
+        ++i;
+        ++ptr;
+        if (ptr > cache->ptr + cache->capacity)
+        {
+            ptr = cache->ptr;
+        }
+    }
+
+    return i;
 }

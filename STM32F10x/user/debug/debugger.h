@@ -3,10 +3,10 @@
 
 #include "stm32f10x.h"
 
-typedef void(*SUPER_CMD_CALLBACK)(u8* super_cmd, u32 len);
+typedef void(*DATA_RECEIVED_CALLBACK)(u8* data, u32 len);
 
 void debugger_init(u8 idx);
-void set_debugger_acceptor(u8 idx);
-void set_super_cmd_handler(SUPER_CMD_CALLBACK func);
+
+DATA_RECEIVED_CALLBACK set_data_received_handler(DATA_RECEIVED_CALLBACK func);
 
 #endif
