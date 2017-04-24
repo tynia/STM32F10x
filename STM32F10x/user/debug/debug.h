@@ -12,6 +12,7 @@ void panic();
 #endif
 
 void debug(const char* fmt, ...);
+void debugc(const char* fmt, ...);
 void wrap_trace(const char* file, u32 line, const char* func, const char* fmt, ...);
 
 #define trace(fmt, ...)                                                  \

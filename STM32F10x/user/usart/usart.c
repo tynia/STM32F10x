@@ -47,7 +47,7 @@ static tagUSART USARTGroup[USART_COM_COUNT] = {
       0, GPIO_PartialRemap_USART3, RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, RCC_APB1Periph_USART3, USART3 }
 };
 
-void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, IRQ_CALLBACK_FUNC func)
+void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, u8 len, IRQ_CALLBACK_FUNC func)
 {
     USART_InitTypeDef USART_InitStruct;
 
@@ -56,9 +56,9 @@ void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, IRQ_CALLB
 
     // CLOCK
     rcc_set_clock(USARTGroup[idx].rcc, ENABLE);
-    rcc_set_clock(USARTGroup[idx].to, ENABLE);
     if (USART_COM_R0 <= idx)
     {
+        rcc_set_clock(USARTGroup[idx].to, ENABLE);
         GPIO_PinRemapConfig(USARTGroup[idx].ReMap, ENABLE);
     }
 
@@ -69,7 +69,7 @@ void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, IRQ_CALLB
     gpio_init(USARTGroup[idx].GPIORx, USARTGroup[idx].Rx, GPIO_Mode_IN_FLOATING, GPIO_Speed_50MHz);
 
     // USART
-    USART_InitStruct.USART_BaudRate = 9600;
+    USART_InitStruct.USART_BaudRate = 115200;
     USART_InitStruct.USART_WordLength = USART_WordLength_8b;
     USART_InitStruct.USART_StopBits = USART_StopBits_1;
     USART_InitStruct.USART_Parity = USART_Parity_No;
@@ -78,20 +78,16 @@ void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, IRQ_CALLB
     USART_Init(USARTGroup[idx].USARTx, &USART_InitStruct);
     USART_Cmd(USARTGroup[idx].USARTx, ENABLE);
 
-    // NVIC
-    nvic_init(USARTGroup[idx].IRQChannel, priority, sub_priority);
-
-    if (NULL == irq)
+    if (NULL != irq)
     {
-        USART_ITConfig(USARTGroup[idx].USARTx, USART_IT_RXNE, ENABLE);
-        USART_ITConfig(USARTGroup[idx].USARTx, USART_IT_IDLE, ENABLE);
-    }
-    else
-    {
-        for (; *irq; ++irq)
+        u8 i = 0;
+        while (i < len)
         {
-            USART_ITConfig(USARTGroup[idx].USARTx, *irq, ENABLE);
+            USART_ITConfig(USARTGroup[idx].USARTx, *(irq+i), ENABLE);
+            ++i;
         }
+        // NVIC
+        nvic_init(USARTGroup[idx].IRQChannel, priority, sub_priority);
     }
 
     if (NULL != func)

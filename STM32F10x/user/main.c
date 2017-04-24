@@ -13,18 +13,20 @@ int main(void)
     //SystemInit();
     irq[0] = USART_IT_IDLE;
     irq[1] = USART_IT_RXNE;
-    irq[1] = USART_IT_TC;
+    //irq[2] = USART_IT_TC;
     // init debugger
-    debugger_init(USART_COM_4);
+    debugger_init(USART_COM_3);
     // init led
     led_init(GPIO_A, GPIO_Pin_2);
     // init a6
-    a6_init(USART_COM_3, irq);
+    a6_init(USART_COM_4, irq, 2);
     
+    //while (0 != a6_is_ready());
+    wait(50000);
     while (1)
     {
         super_debug();
-        wait(0);
+        //wait(0);
     }
     
     return 0;

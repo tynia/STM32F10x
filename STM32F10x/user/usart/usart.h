@@ -22,7 +22,7 @@ typedef enum _tagEUSART
 
 #define USART_INVALID 0xEF
 
-void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irp, IRQ_CALLBACK_FUNC func);
+void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irp, u8 len, IRQ_CALLBACK_FUNC func);
 
 void usart_send_data(tagEUSART idx, u8* data, u32 len);
 

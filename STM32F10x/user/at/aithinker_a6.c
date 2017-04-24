@@ -62,8 +62,11 @@ static tagATCommand AT_TABLE[] = {
 
 static tagATCommand* curCommand = &AT_TABLE[AT_CMD_NONE];
 static u8 buffer[MAX_CACHE_SIZE];
-static ring_cache* cache = 0;
+static ring_cache rcache;
+static ring_cache* cache = &rcache;
 static u8 a6 = USART_INVALID;
+
+s8 _send(u8* cmd, u32 len);
 
 //////////////////////////////////////////////////////////////////////
 void a6_irq_handler(void)
@@ -83,7 +86,7 @@ void a6_irq_handler(void)
 
     if (0 != usart_is_ok(a6, USART_IT_IDLE))
     {
-        if (curCommand->state != AT_STATE_SEND)
+        if (curCommand->state == AT_STATE_SEND)
         {
             curCommand->state = AT_STATE_RECV;
         }
@@ -164,11 +167,11 @@ void super_cmd_handler(u8* data, u32 len)
 }
 ////////////////////////////////////////////////////////////////////////
 
-void a6_init(u8 idx, u16* irq)
+void a6_init(u8 idx, u16* irq, u8 len)
 {
     ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
 
-    usart_init(idx, 3, 3, irq, a6_irq_handler);
+    usart_init(idx, 3, 3, irq, len, a6_irq_handler);
 #ifdef _DEBUG
     ring_cache_init("GPRS", cache, buffer, MAX_CACHE_SIZE);
 #else
@@ -178,6 +181,15 @@ void a6_init(u8 idx, u16* irq)
     // pass it to debugger
     set_debugger_acceptor(a6);
     set_super_cmd_handler(super_cmd_handler);
+}
+
+u8 a6_is_ready()
+{
+    u8 r = 0;
+    curCommand = &AT_TABLE[AT_CMD_CREG];
+    curCommand->state = AT_STATE_SEND; // begin to send
+    r = wait_cmd_ok(0);
+    return r > 1 ? 1 : 0;
 }
 
 s8 wait_cmd_ok(u32 delay) // ms
@@ -249,9 +261,9 @@ s8 _send(u8* cmd, u32 len)
 
 s8 dial(u8* target, u32 port)
 {
-    char cmd[50] = { 0 };
+    u8 cmd[50] = { 0 };
     curCommand = &AT_TABLE[AT_CMD_CIPSTART];
-    snprintf(cmd, 50, "%s\"TCP\",\"%s\",%u\r\n", curCommand->cmd, target, port);
+    snprintf((char*)cmd, 50, "%s\"TCP\",\"%s\",%u\r\n", curCommand->cmd, target, port);
     return _send(cmd, 0);
 }
 

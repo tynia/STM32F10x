@@ -31,6 +31,22 @@ void debug(const char* fmt, ...)
         vsnprintf(debug_buffer, DEBUG_BUFFER_SIZE, fmt, args);
         va_end(args);
         len = str_len(debug_buffer);
+#ifdef
+        cb(debug_buffer, len);
+#endif
+    }
+}
+
+void debugc(const char* fmt, ...)
+{
+    if (NULL != cb)
+    {
+        va_list args;
+        u32 len = 0;
+        va_start(args, fmt);
+        vsnprintf(debug_buffer, DEBUG_BUFFER_SIZE, fmt, args);
+        va_end(args);
+        len = str_len(debug_buffer);
         cb(debug_buffer, len);
     }
 }

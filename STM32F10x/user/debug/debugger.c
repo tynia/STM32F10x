@@ -8,7 +8,8 @@
 #include "stm32f10x_usart.h"
 
 static u8 buffer[MAX_CACHE_SIZE];
-static ring_cache* cache;
+static ring_cache rcache;
+static ring_cache* cache = &rcache;
 static u8 debugger = USART_INVALID;
 static u8 acceptor = USART_INVALID;
 SUPER_CMD_CALLBACK super_cb;
@@ -32,6 +33,11 @@ void process(ring_cache* cache)
 void super_debug(void)
 {
     u8 r;
+
+#ifdef _DEBUG
+    write_cache(cache, "$2$", 3);
+    process(cache);
+#endif
     if (0 != usart_recv_data(debugger, &r))
     {
         write_cache_char(cache, &r);
@@ -39,7 +45,7 @@ void super_debug(void)
         if (0 != usart_is_ok(debugger, USART_IT_IDLE))
         {
             // receive command from computer
-            //debug("received msg, processing");
+            debug("received msg, processing");
             //led_twinkle(LED_A, GPIO_Pin_2, 2, 1000);
             if (NULL != super_cb)
             {
@@ -69,7 +75,7 @@ void debugger_init(u8 idx)
 {
     ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
 
-    usart_init(idx, NULL, 3, 3, NULL);
+    usart_init(idx, 3, 3, NULL, 0, NULL);
 #ifdef _DEBUG
     ring_cache_init("DEBUGGER", cache, buffer, MAX_CACHE_SIZE);
 #else
