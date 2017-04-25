@@ -2,7 +2,7 @@
 #include "util/util.h"
 
 DEBUG_CALLBACK debug_cb = NULL;
-DEBUG_CALLBACK set_debug_data_handler(DEBUG_CALLBACK callback)
+DEBUG_CALLBACK set_debug_handler(DEBUG_CALLBACK callback)
 {
     DEBUG_CALLBACK old = debug_cb;
     debug_cb = callback;
@@ -11,8 +11,10 @@ DEBUG_CALLBACK set_debug_data_handler(DEBUG_CALLBACK callback)
 
 void panic()
 {
+    u8* ptr = NULL;
     console("hit fatal error, pause");
-    __asm int 3;
+    //__asm int 3;
+    *ptr = 233;
 }
 
 #define CONSOLE_BUFFER_SIZE 256

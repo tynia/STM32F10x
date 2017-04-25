@@ -10,7 +10,7 @@
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
 
-typedef struct _tagUSART
+typedef struct _tagUSARTConfig
 {
     u8  GPIOTx;
     u8  GPIORx;
@@ -19,13 +19,12 @@ typedef struct _tagUSART
     u16 Rx;
     u16 vcc;
     u32 ReMap;
-    u32 rcc;
-    u32 to;        // remap to USARTx
+    u32 clk;
+    u32 APB;        // remap to USARTx
     USART_TypeDef* USARTx;
-} tagUSART;
+} tagUSARTConfig;
 
-
-static tagUSART USARTGroup[USART_COM_COUNT] = {
+static tagUSARTConfig USARTGroup[USART_COM_COUNT] = {
     { GPIO_A, GPIO_A, USART1_IRQn, GPIO_Pin_9,  GPIO_Pin_10,
       0, 0, RCC_APB2Periph_GPIOA, RCC_APB2Periph_USART1, USART1 },
     { GPIO_A, GPIO_A, USART2_IRQn, GPIO_Pin_2,  GPIO_Pin_3,
@@ -47,39 +46,24 @@ static tagUSART USARTGroup[USART_COM_COUNT] = {
       0, GPIO_PartialRemap_USART3, RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, RCC_APB1Periph_USART3, USART3 }
 };
 
-void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, u8 len, IRQ_CALLBACK_FUNC func)
+void usart_init(tagEUSART idx, u8 priority, u16* irq, u8 len, IRQ_CALLBACK_FUNC func)
 {
     USART_InitTypeDef USART_InitStruct;
 
     ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid USART index");
-    ASSERT((0 != irq), "invalid IRQ for usart");
 
     // CLOCK
-    rcc_set_clock(USARTGroup[idx].rcc, ENABLE);
+    rcc_set_clock(USARTGroup[idx].clk, USARTGroup[idx].APB, ENABLE);
     if (USART_COM_R0 <= idx)
     {
-        rcc_set_clock(USARTGroup[idx].to, ENABLE);
         GPIO_PinRemapConfig(USARTGroup[idx].ReMap, ENABLE);
-    }
-
-    // NVIC
-    if (NULL != irq)
-    {
-        u8 i = 0;
-        while (i < len)
-        {
-            USART_ITConfig(USARTGroup[idx].USARTx, *(irq + i), ENABLE);
-            ++i;
-        }
-
-        nvic_init(USARTGroup[idx].IRQChannel, priority, sub_priority);
     }
 
     // GPIO
     // TX
-    gpio_init(USARTGroup[idx].GPIOTx, USARTGroup[idx].Tx, GPIO_Mode_AF_PP, GPIO_Speed_50MHz);
+    gpio_init(USARTGroup[idx].GPIOTx, USARTGroup[idx].Tx, (u8)GPIO_Mode_AF_PP, (u8)GPIO_Speed_50MHz);
     // RX
-    gpio_init(USARTGroup[idx].GPIORx, USARTGroup[idx].Rx, GPIO_Mode_IN_FLOATING, GPIO_Speed_50MHz);
+    gpio_init(USARTGroup[idx].GPIORx, USARTGroup[idx].Rx, (u8)GPIO_Mode_IN_FLOATING, (u8)GPIO_Speed_50MHz);
 
     // USART
     USART_InitStruct.USART_BaudRate = 115200;
@@ -95,15 +79,29 @@ void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irq, u8 len, I
     {
         set_irq_handler(idx, func);
     }
+
+    // NVIC
+    if (NULL != irq)
+    {
+        u8 i = 0;
+        while (i < len)
+        {
+            USART_ITConfig(USARTGroup[idx].USARTx, *(irq + i), ENABLE);
+            ++i;
+        }
+    }
+
+    nvic_init(USARTGroup[idx].IRQChannel, priority, 0);
 }
 
 void usart_send_data(tagEUSART idx, u8* data, u32 len)
 {
     u32 i = 0;
+    u8* ptr = data;
     ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid USART index");
     for (; i < len; ++i)
     {
-        USART_SendData(USARTGroup[idx].USARTx, *data++);
+        USART_SendData(USARTGroup[idx].USARTx, *ptr++);
         while (USART_GetFlagStatus(USARTGroup[idx].USARTx, USART_FLAG_TXE) == RESET);
     }
 }

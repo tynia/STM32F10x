@@ -15,13 +15,13 @@ s8 zero_cache(ring_cache* cache)
     u8* ptr = 0;
     if (NULL == cache)
     {
-        trace("cache is uninitialized");
+        console("cache is uninitialized");
         return -1;
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        trace("invalid cache, one or more ring cache member is NULL");
+        console("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
@@ -34,17 +34,17 @@ s8 zero_cache(ring_cache* cache)
     return 0;
 }
 
-s8 cache_is_empty(ring_cache* cache)
+s8 cache_empty(ring_cache* cache)
 {
     if (NULL == cache)
     {
-        trace("cache is uninitialized");
+        console("cache is uninitialized");
         return 0;
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        trace("invalid cache, one or more ring cache member is NULL");
+        console("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
@@ -56,17 +56,17 @@ s8 cache_is_empty(ring_cache* cache)
     return 0;
 }
 
-s8 cache_is_full(ring_cache* cache)
+s8 cache_full(ring_cache* cache)
 {
     if (NULL == cache)
     {
-        trace("cache is uninitialized");
+        console("cache is uninitialized");
         return 0;
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        trace("invalid cache, one or more ring cache member is NULL");
+        console("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
@@ -84,25 +84,25 @@ s32 write_cache(ring_cache* cache, u8* data, u16 len)
     u16 wlen = 0;
     if (NULL == cache)
     {
-        trace("cache is uninitialized");
+        console("cache is uninitialized");
         return -1; // error for none
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        trace("invalid cache, one or more ring cache member is NULL");
+        console("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
     if (NULL == data)
     {
-        trace("invalid data, NULL pointer in");
+        console("invalid data, NULL pointer in");
         return 0;
     }
 
     if (cache->head + 1 == cache->tail)
     {
-        trace("cache is full");
+        console("cache is full");
         return 0;
     }
     
@@ -121,17 +121,21 @@ s32 write_cache(ring_cache* cache, u8* data, u16 len)
 
     if (len > rest)
     {
-        trace("warning: the length to write [%d] is greater than rest buffer size[%d]", len, rest);
+        console("warning: the length to write [%d] is greater than rest buffer size[%d]", len, rest);
     }
 
-    trace("the rest size of cache is %d", rest);
+    console("the rest size of cache is %d", rest);
 
+    while (cache->head < cache->ptr + cache->capacity && wlen < len)
+    {
+
+    }
     // head is in front of the tail
     if (cache->tail <= cache->head)
     {
         if (cache->head < cache->ptr + cache->capacity)
         {
-            while (cache->head < cache->ptr + cache->capacity)
+            while (cache->head < cache->ptr + cache->capacity && wlen < len)
             {
                 *(cache->head) = *data;
                 ++cache->head;
@@ -139,7 +143,10 @@ s32 write_cache(ring_cache* cache, u8* data, u16 len)
                 ++wlen;
             }
         }
-        cache->head = cache->ptr;
+        else
+        {
+            cache->head = cache->ptr;
+        }
     }
 
     while (cache->head < cache->tail)
@@ -157,25 +164,25 @@ s8 write_cache_char(ring_cache* cache, u8* c)
 {
     if (NULL == cache)
     {
-        trace("cache is uninitialized");
+        console("cache is uninitialized");
         return -1; // error for none
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        trace("invalid cache, one or more ring cache member is NULL");
+        console("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
     if (cache->head + 1 == cache->tail)
     {
-        trace("cache is full");
+        console("cache is full");
         return 0;
     }
 
     if (NULL == c)
     {
-        trace("invalid char buffer");
+        console("invalid char buffer");
         return -1;
     }
 
@@ -200,7 +207,7 @@ u8 write_cache_char_not_safe(ring_cache* cache, u8* c)
 
     if (cache->head + 1 == cache->tail)
     {
-        trace("cache is full");
+        console("cache is full");
         return 0;
     }
 
@@ -219,25 +226,25 @@ s8 read_cache_char(ring_cache* cache, u8* c)
 {
     if (NULL == cache)
     {
-        trace("cache is uninitialized");
+        console("cache is uninitialized");
         return -1; // error for none
     }
 
     if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
     {
-        trace("invalid cache, one or more ring cache member is NULL");
+        console("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
     if (NULL == c)
     {
-        trace("char buffer is not initialized");
+        console("char buffer is not initialized");
         return -1;
     }
 
     if (cache->head == cache->tail)
     {
-        trace("cache is empty");
+        console("cache is empty");
         return 0;
     }
 
@@ -265,7 +272,7 @@ u8 read_cache_char_not_safe(ring_cache* cache, u8* c)
 
     if (cache->head == cache->tail)
     {
-        trace("cache is empty");
+        console("cache is empty");
         return 0;
     }
 
@@ -287,7 +294,7 @@ s8 cache_find_string(ring_cache* cache, u8* dst)
 
     if (NULL == cache)
     {
-        trace("cache is uninitialized");
+        console("cache is uninitialized");
         return -1; // error for none
     }
 
@@ -298,7 +305,7 @@ s8 cache_find_string(ring_cache* cache, u8* dst)
 
     if (cache->head == cache->tail)
     {
-        trace("cache is empty");
+        console("cache is empty");
         return -1;
     }
 

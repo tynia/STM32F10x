@@ -20,7 +20,7 @@ u8  str_cmp(u8* src, u8* dst, u32 len)
     u32 i = 0;
     if (NULL == src || NULL == dst)
     {
-        return -1;
+        return 0;
     }
 
     while (i < len)

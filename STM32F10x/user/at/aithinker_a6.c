@@ -59,13 +59,13 @@ static tagATCommand AT_TABLE[] = {
 };
 
 static tagATCommand* curCommand = &AT_TABLE[AT_CMD_NONE];
+static u8 a6     = USART_COM_INVALID;
+static u8 target = USART_COM_INVALID;
 static u8 buffer[MAX_CACHE_SIZE];
-static ring_cache rcache;
-static ring_cache* cache = &rcache;
-static u8 a6 = USART_INVALID;
-static u8 ro = 0;
+static ring_cache dummy;
+static ring_cache* cache = &dummy;
+static u8 recv_state = 0;
 static u8 a6_state = AT_STATE_IDLE;
-
 
 s8 _send(u8* cmd, u32 len);
 
@@ -81,31 +81,25 @@ void a6_irq_handler(void)
         }
         else
         {
+            write_cache_char(cache, &r);
             if (r == 0x0D)
             {
-                ro = 1;
+                recv_state = 1;
             }
             else if (r == 0x0A)
             {
-                ro = 0; // reset frame flag
-                led_twinkle(LED_A, GPIO_Pin_2, 2, 1000);
+                recv_state = 0;
                 a6_state = AT_STATE_RECV;
-                // other will get the state and handle recv cache
-            }
-            else
-            {
-                write_cache_char(cache, &r);
+                transmit(a6, target);
             }
         }
     }
-
-    if (0 != usart_is_ok(a6, USART_IT_TC))
-    {
-        led_twinkle(LED_A, GPIO_Pin_2, 3, 1000);
-    }
 }
 
-void exchange_data_handler(u8* data, u32 len)
+// send data to target
+
+#ifdef _DEBUG
+void a6_data_handler(u8* data, u32 len)
 {
     u8* ptr = data;
     u8* cmd = NULL;
@@ -140,7 +134,7 @@ void exchange_data_handler(u8* data, u32 len)
     {
         cmd = "AT+CREG?\r\n";
     }
-    else if('3' == *ptr && '$' == *(ptr + 1))
+    else if ('3' == *ptr && '$' == *(ptr + 1))
     {
         cmd = "AT+CSQ\r\n";
     }
@@ -170,30 +164,25 @@ void exchange_data_handler(u8* data, u32 len)
         console("command send time out, cmd: %s", cmd);
     }
 }
+#else
+void a6_data_handler(u8* data, u32 len)
+{}
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////
-
-void a6_init(u8 idx, u16* irq, u8 len)
+void a6_init(u8 idx, u16* irq, u8 len, u8 a6_target)
 {
     ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
-
-    usart_init(idx, 3, 3, irq, len, a6_irq_handler);
     ring_cache_init(cache, buffer, MAX_CACHE_SIZE);
-    a6 = idx;
 #ifdef _DEBUG
-    set_data_received_handler(exchange_data_handler);
+    reg(idx, cache, a6_data_handler);
 #else
-    set_data_exchange_handler(exchange_data_handler);
+    reg(idx, cache, a6_data_handler);
 #endif
-}
-
-u8 a6_is_ready()
-{
-    u8 r = 0;
-    curCommand = &AT_TABLE[AT_CMD_CREG];
-    a6_state = AT_STATE_SEND; // begin to send
-    r = check(0);
-    return r > 1 ? 1 : 0;
+    a6 = idx;
+    target = a6_target;
+    usart_init(idx, 3, irq, len, a6_irq_handler);
 }
 
 s8 check(u32 delay) // ms
@@ -207,7 +196,7 @@ s8 check(u32 delay) // ms
     {
         u32 cost = 0;
         u32 period = 1000;
-        while (AT_STATE_RECV > a6_state)
+        while (AT_STATE_RECV != a6_state)
         {
             if (cost < delay)
             {

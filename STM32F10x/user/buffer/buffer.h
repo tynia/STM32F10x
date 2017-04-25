@@ -15,8 +15,8 @@ typedef struct
 
 void ring_cache_init(ring_cache* cache, u8* buffer, u32 size);
 s8 zero_cache(ring_cache* cache);
-s8 cache_is_empty(ring_cache* cache);
-s8 cache_is_full(ring_cache* cache);
+s8 cache_empty(ring_cache* cache);
+s8 cache_full(ring_cache* cache);
 s32 write_cache(ring_cache* cache, u8* data, u16 len);
 s8 write_cache_char(ring_cache* cache, u8* c);
 u8 write_cache_char_not_safe(ring_cache* cache, u8* c);

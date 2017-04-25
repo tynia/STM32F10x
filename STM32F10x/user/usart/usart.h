@@ -6,6 +6,7 @@
 
 typedef enum _tagEUSART
 {
+    USART_COM_INVALID = 0xEF,
     USART_COM_1 = 0,
     USART_COM_2 = 1,
     USART_COM_3 = 2,
@@ -19,14 +20,12 @@ typedef enum _tagEUSART
     USART_COM_COUNT
 } tagEUSART;
 
-#define USART_INVALID 0xEF
-
-void usart_init(tagEUSART idx, u8 priority, u8 sub_priority, u16* irp, u8 len, IRQ_CALLBACK_FUNC func);
+void usart_init(tagEUSART idx, u8 priority, u16* irp, u8 len, IRQ_CALLBACK_FUNC func);
 
 void usart_send_data(tagEUSART idx, u8* data, u32 len);
 
-u8 usart_recv_data(tagEUSART idx, u8* c);
+u8   usart_recv_data(tagEUSART idx, u8* c);
 
-u8 usart_is_ok(tagEUSART idx, u16 irq);
+u8   usart_is_ok(tagEUSART idx, u16 irq);
 
 #endif

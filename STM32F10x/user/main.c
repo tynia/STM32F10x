@@ -1,6 +1,7 @@
 #include "led/led.h"
 #include "gpio/gpio.h"
-#include "exchange/exchanger.h"
+#include "transfer/transfer.h"
+#include "acceptor/acceptor.h"
 #include "usart/usart.h"
 #include "at/aithinker_a6.h"
 #include "util/util.h"
@@ -9,27 +10,24 @@
 
 int main(void)
 {
-    u8 i = 0;
     u16 irq[3];
-    //SystemInit();
-    irq[0] = USART_IT_IDLE;
-    irq[1] = USART_IT_RXNE;
-    //irq[2] = USART_IT_TC;
+    irq[0] = USART_IT_RXNE;
+#ifdef _DEBUG
     // init debugger
-    debugger_init(USART_COM_3);
+    debugger_init(USART_COM_3, USART_COM_4);
+#else
+    acceptor_init(USART_COM_3, irq, 3, USART_COM_4);
+#endif
+    // init a6
+    a6_init(USART_COM_4, irq, 1, USART_COM_3);
     // init led
     led_init(GPIO_A, GPIO_Pin_2);
-    // init a6
-    a6_init(USART_COM_4, irq, 2);
-    
-    while (i < 50)
-    {
-        wait(1000);
-    }
+
     while (1)
     {
-        super_debug();
-        //wait(0);
+        transfer();
+        wait(5000);
+        debug_in();
     }
     
     return 0;

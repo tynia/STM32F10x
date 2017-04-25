@@ -344,7 +344,7 @@
             <uThumb>0</uThumb>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER,USE_STM3210E_EVAL</Define>
+              <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER,USE_STM3210E_EVAL,_DEBUG</Define>
               <Undefine></Undefine>
               <IncludePath>.\core;.\fwlib;.\system;.\user;.\utilities</IncludePath>
             </VariousControls>
@@ -575,6 +575,16 @@
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\user\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>transfer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\transfer\transfer.c</FilePath>
+            </File>
+            <File>
+              <FileName>acceptor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\acceptor\acceptor.c</FilePath>
             </File>
           </Files>
         </Group>

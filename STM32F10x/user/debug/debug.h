@@ -6,9 +6,9 @@
 #include <stdio.h>
 
 typedef void(*DEBUG_CALLBACK)(u8* data, u32 len);
-DEBUG_CALLBACK set_debug_data_handler(DEBUG_CALLBACK callback);
+DEBUG_CALLBACK set_debug_handler(DEBUG_CALLBACK callback);
 
-void panic();
+void panic(void);
 void console(const char* fmt, ...);
 
 #define ASSERT(ok, fmt, ...)            \

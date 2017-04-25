@@ -47,7 +47,7 @@ void USART4_IRQHandler(void)
 {
     if (0 != irq[USART_IRQ_4])
     {
-        irq[USART_IRQ_5]();
+        irq[USART_IRQ_4]();
     }
 }
 

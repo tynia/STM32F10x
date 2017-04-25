@@ -3,5 +3,5 @@
 
 #include "stm32f10x.h"
 
-void rcc_set_clock(u32 mask, u8 enable);
+void rcc_set_clock(u32 mask, u32 APB, u8 enable);
 #endif
