@@ -128,33 +128,21 @@ s32 write_cache(ring_cache* cache, u8* data, u16 len)
 
     while (cache->head < cache->ptr + cache->capacity && wlen < len)
     {
-
-    }
-    // head is in front of the tail
-    if (cache->tail <= cache->head)
-    {
-        if (cache->head < cache->ptr + cache->capacity)
-        {
-            while (cache->head < cache->ptr + cache->capacity && wlen < len)
-            {
-                *(cache->head) = *data;
-                ++cache->head;
-                ++data;
-                ++wlen;
-            }
-        }
-        else
-        {
-            cache->head = cache->ptr;
-        }
-    }
-
-    while (cache->head < cache->tail)
-    {
         *(cache->head) = *data;
         ++cache->head;
         ++data;
         ++wlen;
+
+        if (cache->head > cache->ptr + cache->capacity)
+        {
+            cache->head = cache->ptr;
+        }
+
+        if (cache->head == cache->tail)
+        {
+            // cache is full
+            break;
+        }
     }
 
     return wlen;
