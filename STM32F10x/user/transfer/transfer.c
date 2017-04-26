@@ -58,7 +58,7 @@ void doTask(u8 id)
 
 void Register(tagEUSART tag, tagEUSART target, tagRingCache* cache, ON_DATA_RECEIVED_CALLBACK cb)
 {
-    ASSERT(tag >= USART_COM_INVALID && tag < MAX_USART_COM_COUNT, "invalid USART tag");
+    ASSERT(tag < MAX_USART_COM_COUNT, "invalid USART tag");
     if (USART_COM_INVALID == entity[tag].id)
     {
         entity[tag].id = tag;

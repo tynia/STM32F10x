@@ -43,7 +43,7 @@ void USART3_IRQHandler(void)
     }
 }
 
-void USART4_IRQHandler(void)
+void UART4_IRQHandler(void)
 {
     if (0 != irq[USART_IRQ_4])
     {
@@ -51,7 +51,7 @@ void USART4_IRQHandler(void)
     }
 }
 
-void USART5_IRQHandler(void)
+void UART5_IRQHandler(void)
 {
     if (0 != irq[USART_IRQ_5])
     {

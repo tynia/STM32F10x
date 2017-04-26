@@ -37,6 +37,8 @@ tagRingCache* InitRingCache(u8* buffer, u32 size)
             cache->head = cache->ptr;
             cache->tail = cache->ptr;
             ZeroCache(cache);
+            
+            RING_CACHE_STATE |= (1 << i);
 
             return cache;
         }

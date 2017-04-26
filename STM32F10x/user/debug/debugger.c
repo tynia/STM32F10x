@@ -43,6 +43,7 @@ void InitDebugger(tagEUSART tag, tagEUSART target)
     u16 irq;
     irq = USART_IT_RXNE;
     cache = InitRingCache(buffer, MAX_CACHE_SIZE);
+    ASSERT(NULL == cache, "OOM, failed to init cache");
     Register(tag, target, cache, OnDebugData);
     debugger = tag;
     SetDebugOutHandler(OnDebugData);

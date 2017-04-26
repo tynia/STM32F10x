@@ -16,17 +16,17 @@ int main(void)
     
 #ifdef _DEBUG
     // init debugger
-    InitDebugger(USART_COM_3, USART_COM_4);
+    InitDebugger(USART_COM_4, USART_COM_3);
 #else
-    InitAcceptor(USART_COM_3, irq, 1, USART_COM_4);
+    InitAcceptor(USART_COM_4, irq, 1, USART_COM_3);
 #endif
     // init a6
-    A6Init(USART_COM_4, irq, 1, USART_COM_3);
-    if (WaitOK() <= 0)
-    {
-        console("GPRS module initialize failed");
-        return -1;
-    }
+    A6Init(USART_COM_3, irq, 1, USART_COM_4);
+//     if (WaitOK() <= 0)
+//     {
+//         console("GPRS module initialize failed");
+//         return -1;
+//     }
     // init led
     InitLED(AGPIO, GPIO_Pin_2);
 
@@ -34,6 +34,7 @@ int main(void)
     {
         transfer();
         wait(5000);
+        console("abc\r\n");
     }
     
     return 0;

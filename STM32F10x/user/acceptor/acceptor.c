@@ -39,9 +39,10 @@ void AcceptorIRQHandler(void)
 
 void InitAcceptor(tagEUSART tag, u16* irq, u8 len, tagEUSART target)
 {
-    ASSERT((tag > USART_COM_INVALID && tag < MAX_USART_COM_COUNT), "invalid USART tag");
-    ASSERT((tag > USART_COM_INVALID && tag < MAX_USART_COM_COUNT), "invalid USART target tag");
+    ASSERT(tag < MAX_USART_COM_COUNT, "invalid USART tag");
+    ASSERT(tag < MAX_USART_COM_COUNT, "invalid USART target tag");
     cache = InitRingCache(buffer, MAX_CACHE_SIZE);
+    ASSERT(NULL == cache, "OOM, failed to init cache");
     Register(tag, target, cache, OnAcceptorData);
     acceptor = tag;
     InitUSARTCTRL(tag, 3, 0, irq, len, AcceptorIRQHandler);
