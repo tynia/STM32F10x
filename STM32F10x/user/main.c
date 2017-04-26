@@ -30,6 +30,7 @@ int main(void)
     // init led
     InitLED(AGPIO, GPIO_Pin_2);
 
+    console("program start...");
     while (1)
     {
         transfer();
