@@ -5,6 +5,6 @@
 
 typedef void (*IRQ_CALLBACK_FUNC)(void);
 
-void set_irq_handler(u8 idx, IRQ_CALLBACK_FUNC func);
+void SetIRQHandler(u8 tag, IRQ_CALLBACK_FUNC func);
 
 #endif

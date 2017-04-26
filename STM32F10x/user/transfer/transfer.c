@@ -2,85 +2,85 @@
 #include "usart/usart.h"
 #include "util/util.h"
 #include "debug/debug.h"
+#include "buffer/buffer.h"
 #include <stdio.h>
 
-#define TASK_QUEUE_SIZE 50
-
-typedef struct _tagTask
-{
-    u8 from;
-    u8 to;
-} tagTask;
+#define MSG_QUEUE_SIZE 50
 
 typedef struct _tagEntity
 {
     u8 id;
-    ring_cache* cache;
+    u8 to;
+    tagRingCache* cache;
     ON_DATA_RECEIVED_CALLBACK cb;
 } tagEntity;
 
-static u8 buffer[MAX_CACHE_SIZE] = { 0 };
-static tagTask  task_queue[TASK_QUEUE_SIZE] = { 0 };
-static tagTask* task_head = task_queue;
-static tagTask* task_tail = task_queue;
-static tagEntity entity[USART_COM_COUNT] = {
-    { USART_COM_INVALID, NULL, NULL },
-    { USART_COM_INVALID, NULL, NULL },
-    { USART_COM_INVALID, NULL, NULL },
-    { USART_COM_INVALID, NULL, NULL },
-    { USART_COM_INVALID, NULL, NULL },
-    { USART_COM_INVALID, NULL, NULL },
-    { USART_COM_INVALID, NULL, NULL },
-    { USART_COM_INVALID, NULL, NULL },
-    { USART_COM_INVALID, NULL, NULL },
+typedef u8 msg;
+
+static u8  buffer[MAX_CACHE_SIZE] = { 0 };
+static msg mqueue[MSG_QUEUE_SIZE] = { 0 };
+static msg* phead = mqueue;
+static msg* ptail = mqueue;
+static tagEntity entity[] = {
+    { USART_COM_INVALID, USART_COM_INVALID, NULL, NULL },
+    { USART_COM_INVALID, USART_COM_INVALID, NULL, NULL },
+    { USART_COM_INVALID, USART_COM_INVALID, NULL, NULL },
+    { USART_COM_INVALID, USART_COM_INVALID, NULL, NULL },
+    { USART_COM_INVALID, USART_COM_INVALID, NULL, NULL },
+    { USART_COM_INVALID, USART_COM_INVALID, NULL, NULL },
+    { USART_COM_INVALID, USART_COM_INVALID, NULL, NULL },
+    { USART_COM_INVALID, USART_COM_INVALID, NULL, NULL },
+    { USART_COM_INVALID, USART_COM_INVALID, NULL, NULL },
 };
 
-void doTask(u8 from, u8 to)
+void doTask(u8 id)
 {
-    u8* ptr = buffer;
     u32 len = 0;
-    ring_cache* cache = entity[from].cache;
+    tagRingCache* cache = entity[id].cache;
     if (NULL == cache)
     {
         // invalid cache
         return;
     }
     
-    while (read_cache_char(cache, ptr) > 0)
+    len = ReadPacket(cache, buffer, MAX_CACHE_SIZE);
+    if (len > 0)
     {
-        ++ptr;
-        ++len;
+        entity[entity[id].to].cb(buffer, len);
     }
-    entity[to].cb(buffer, len);
+    else
+    {
+        console("failed to read one packet from cache: source: %d", id);
+    }
 
     zero(buffer, MAX_CACHE_SIZE);
 }
 
-void reg(u8 idx, ring_cache* cache, ON_DATA_RECEIVED_CALLBACK cb)
+void Register(tagEUSART tag, tagEUSART target, tagRingCache* cache, ON_DATA_RECEIVED_CALLBACK cb)
 {
-    ASSERT(idx >= 0 && idx < USART_COM_COUNT, "invalid USART tag");
-    if (USART_COM_INVALID == entity[idx].id)
+    ASSERT(tag >= USART_COM_INVALID && tag < MAX_USART_COM_COUNT, "invalid USART tag");
+    if (USART_COM_INVALID == entity[tag].id)
     {
-        entity[idx].id = idx;
-        entity[idx].cache = cache;
-        entity[idx].cb = cb;
+        entity[tag].id = tag;
+        entity[tag].to = target;
+        entity[tag].cache = cache;
+        entity[tag].cb = cb;
     }
 }
 
-u8 transmit(u8 from, u8 to)
+u8 transmit(tagEUSART id)
 {
-    if (task_head + 1 == task_tail)
+    if (phead + 1 == ptail)
     {
         return 0;
     }
 
-    task_head->from = from;
-    task_head->to = to;
-    ++task_head;
+    *phead = id;
+    ++phead;
 
-    if (task_head > task_queue + TASK_QUEUE_SIZE)
+    if (phead > mqueue + MSG_QUEUE_SIZE)
     {
-        task_head = task_queue;
+        phead = mqueue;
     }
 
     return 1;
@@ -88,14 +88,14 @@ u8 transmit(u8 from, u8 to)
 
 void transfer()
 {
-    while (task_head != task_tail)
+    while (ptail != phead)
     {
-        doTask(task_tail->from, task_tail->to);
-        ++task_tail;
+        doTask(*ptail);
+        ++ptail;
 
-        if (task_tail > task_queue + TASK_QUEUE_SIZE)
+        if (ptail > mqueue + MSG_QUEUE_SIZE)
         {
-            task_tail = task_queue;
+            ptail = mqueue;
         }
     }
 }

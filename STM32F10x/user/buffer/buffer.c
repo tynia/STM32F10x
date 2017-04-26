@@ -1,136 +1,90 @@
-#include "buffer/buffer.h"
-#include "util/util.h"
+#include "buffer.h"
 #include "debug/debug.h"
 
-void ring_cache_init(ring_cache* cache, u8* buffer, u32 size)
-{
-    cache->ptr = buffer;
-    cache->head = buffer;
-    cache->tail = buffer;
-    cache->capacity = size;
-}
+#define MAX_CACHE_SLOT 8
+static u8 RING_CACHE_STATE = 0;
+static tagRingCache* CachePool[MAX_CACHE_SLOT] = { 0 };
 
-s8 zero_cache(ring_cache* cache)
+void ZeroCache(tagRingCache* cache)
 {
-    u8* ptr = 0;
+    u32 i = 0;
+    u8* ptr = cache->ptr;
     if (NULL == cache)
     {
-        console("cache is uninitialized");
-        return -1;
+        return;
     }
 
-    if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
+    while (i < cache->capacity)
     {
-        console("invalid cache, one or more ring cache member is NULL");
-        return -1;
+        *ptr = '\0';
+        ++i;
     }
-
-    ptr = cache->ptr;
-    for (; ptr < cache->ptr + cache->capacity; ++ptr)
-    {
-        *ptr = 0;
-    }
-
-    return 0;
 }
 
-s8 cache_empty(ring_cache* cache)
+tagRingCache* InitRingCache(u8* buffer, u32 size)
 {
-    if (NULL == cache)
+    u8 i = 0;
+    tagRingCache* cache = NULL;
+    ASSERT(NULL != buffer, "invalid buffer assigned to cache");
+
+    for (; i < MAX_CACHE_SLOT; ++i)
     {
-        console("cache is uninitialized");
-        return 0;
+        if (!(RING_CACHE_STATE & (1 << i)))
+        {
+            cache = CachePool[i];
+            cache->ptr = buffer;
+            cache->capacity = size;
+            cache->head = cache->ptr;
+            cache->tail = cache->ptr;
+            ZeroCache(cache);
+
+            return cache;
+        }
     }
 
-    if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
-    {
-        console("invalid cache, one or more ring cache member is NULL");
-        return -1;
-    }
-
-    if (cache->head == cache->tail)
-    {
-        return 1;
-    }
-
-    return 0;
+    return cache;
 }
 
-s8 cache_full(ring_cache* cache)
+s32 Write(tagRingCache* cache, u8* data, u32 len)
 {
-    if (NULL == cache)
-    {
-        console("cache is uninitialized");
-        return 0;
-    }
-
-    if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
-    {
-        console("invalid cache, one or more ring cache member is NULL");
-        return -1;
-    }
-
-    if (cache->head + 1 == cache->tail)
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
-s32 write_cache(ring_cache* cache, u8* data, u16 len)
-{
+    u32 wlen = 0;
     u32 rest = 0;
-    u16 wlen = 0;
+    u8* ptr = NULL;
     if (NULL == cache)
     {
-        console("cache is uninitialized");
-        return -1; // error for none
-    }
-
-    if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
-    {
-        console("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
     if (NULL == data)
     {
-        console("invalid data, NULL pointer in");
-        return 0;
+        return -1;
     }
 
     if (cache->head + 1 == cache->tail)
     {
-        console("cache is full");
         return 0;
     }
-    
-    if (cache->head == cache->tail)
+
+    if (cache->head >= cache->tail)
     {
-        rest = cache->capacity;
-    }
-    else if (cache->head < cache->tail)
-    {
-        rest = cache->tail - cache->head;
+        rest = cache->capacity - (cache->tail - cache->head);
     }
     else
     {
-        rest = cache->capacity - (cache->head - cache->tail);
+        rest = cache->tail - cache->head;
     }
 
     if (len > rest)
     {
-        console("warning: the length to write [%d] is greater than rest buffer size[%d]", len, rest);
+        len = rest;
     }
 
-    console("the rest size of cache is %d", rest);
-
-    while (cache->head < cache->ptr + cache->capacity && wlen < len)
+    ptr = data;
+    while (cache->head + 1 != cache->tail)
     {
-        *(cache->head) = *data;
+        *(cache->head) = *ptr;
         ++cache->head;
-        ++data;
+        ++ptr;
         ++wlen;
 
         if (cache->head > cache->ptr + cache->capacity)
@@ -138,136 +92,98 @@ s32 write_cache(ring_cache* cache, u8* data, u16 len)
             cache->head = cache->ptr;
         }
 
-        if (cache->head == cache->tail)
+        if (wlen >= len)
         {
-            // cache is full
             break;
         }
     }
 
-    return wlen;
+    return (s32)wlen;
 }
 
-s8 write_cache_char(ring_cache* cache, u8* c)
+s32 Read(tagRingCache* cache, u8* buffer, u32 size, u32 toRead)
 {
+    u32 rlen = 0;
+    u8* ptr = buffer;
     if (NULL == cache)
     {
-        console("cache is uninitialized");
-        return -1; // error for none
-    }
-
-    if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
-    {
-        console("invalid cache, one or more ring cache member is NULL");
         return -1;
     }
 
-    if (cache->head + 1 == cache->tail)
+    if (NULL == buffer)
     {
-        console("cache is full");
-        return 0;
-    }
-
-    if (NULL == c)
-    {
-        console("invalid char buffer");
         return -1;
     }
 
-    *(cache->head) = *c;
-    ++cache->head;
-
-    if (cache->head >= cache->ptr + cache->capacity)
+    if (size < toRead)
     {
-        cache->head = cache->ptr;
+        toRead = size;
     }
 
-    return 1;
-}
-
-u8 write_cache_char_not_safe(ring_cache* cache, u8* c)
-{
-    ASSERT(NULL != cache, "cache is uninitialized");
-    ASSERT(NULL != cache->ptr, "invalid cache, cache ptr is NULL");
-    ASSERT(NULL != cache->head, "invalid cache, head pointer is NULL");
-    ASSERT(NULL != cache->tail, "invalid cache, tail pointer is NULL");
-    ASSERT(NULL != c, "invalid char buffer, char pointer is NULL");
-
-    if (cache->head + 1 == cache->tail)
+    while (cache->tail != cache->head)
     {
-        console("cache is full");
-        return 0;
-    }
-
-    *(cache->head) = *c;
-    ++cache->head;
-
-    if (cache->head >= cache->ptr + cache->capacity)
-    {
-        cache->head = cache->ptr;
-    }
-
-    return 1;
-}
-
-s8 read_cache_char(ring_cache* cache, u8* c)
-{
-    if (NULL == cache)
-    {
-        console("cache is uninitialized");
-        return -1; // error for none
-    }
-
-    if (NULL == cache->ptr || NULL == cache->head || NULL == cache->tail)
-    {
-        console("invalid cache, one or more ring cache member is NULL");
-        return -1;
-    }
-
-    if (NULL == c)
-    {
-        console("char buffer is not initialized");
-        return -1;
-    }
-
-    if (cache->head == cache->tail)
-    {
-        console("cache is empty");
-        return 0;
-    }
-
-    if (NULL != cache->tail)
-    {
-        *c = *(cache->tail);
+        *ptr = *(cache->tail);
         ++cache->tail;
+        ++ptr;
+        ++rlen;
+
+        if (cache->tail > cache->ptr + cache->capacity)
+        {
+            cache->tail = cache->ptr;
+        }
+
+        if (rlen >= toRead)
+        {
+            break;
+        }
     }
 
-    if (cache->tail >= cache->ptr + cache->capacity)
+    return rlen;
+}
+s8  WriteChar(tagRingCache* cache, u8 c)
+{
+    if (NULL == cache)
     {
-        cache->tail = cache->ptr;
+        return -1;
+    }
+
+    if (cache->head + 1 == cache->tail)
+    {
+        return 0;
+    }
+
+    *(cache->head) = c;
+    ++cache->head;
+
+    if (cache->head > cache->ptr + cache->capacity)
+    {
+        cache->head = cache->ptr;
     }
 
     return 1;
 }
 
-u8 read_cache_char_not_safe(ring_cache* cache, u8* c)
+s8  ReadChar(tagRingCache* cache, u8* c)
 {
-    ASSERT(NULL != cache, "cache is uninitialized");
-    ASSERT(NULL != cache->ptr, "invalid cache, cache ptr is NULL");
-    ASSERT(NULL != cache->head, "invalid cache, head pointer is NULL");
-    ASSERT(NULL != cache->tail, "invalid cache, tail pointer is NULL");
-    ASSERT(NULL != c, "invalid char buffer, char pointer is NULL");
+    if (NULL == cache)
+    {
+        return -1;
+    }
+
+    if (NULL == c)
+    {
+        return -1;
+    }
 
     if (cache->head == cache->tail)
     {
-        console("cache is empty");
         return 0;
     }
 
     *c = *(cache->tail);
     ++cache->tail;
 
-    if (cache->tail >= cache->ptr + cache->capacity)
+    if (cache->tail > cache->ptr + cache->capacity)
     {
         cache->tail = cache->ptr;
     }
@@ -275,77 +191,61 @@ u8 read_cache_char_not_safe(ring_cache* cache, u8* c)
     return 1;
 }
 
-s8 cache_find_string(ring_cache* cache, u8* dst)
+s32 ReadPacket(tagRingCache* cache, u8* buffer, u32 size)
 {
-    u32 i = 0;
-    u8* ptr = cache->tail;
-
+    u8 state;
+    u32 rlen;
     if (NULL == cache)
     {
-        console("cache is uninitialized");
-        return -1; // error for none
+        return -1;
     }
 
-    if (NULL == dst)
+    if (NULL == buffer)
     {
-        return 0;
+        return -1;
     }
 
     if (cache->head == cache->tail)
     {
-        console("cache is empty");
-        return -1;
-    }
-
-    for (; ptr != cache->head; ++ptr)
-    {
-        if (ptr >= cache->ptr + cache->capacity)
-        {
-            ptr = cache->ptr;
-        }
-
-        if (*(dst + i) == '\0')
-        {
-            return 1;
-        }
-
-        if (*(dst + i) == *(ptr))
-        {
-            ++i;
-        }
-        else
-        {
-            i = 0;
-        }
-    }
-
-    return 0;
-}
-
-void markr(ring_cache* cache)
-{
-    cache->tail = cache->head;
-}
-
-u32 fetch_len(ring_cache* cache)
-{
-    u32 i = 0;
-    u8* ptr = NULL;
-    if (NULL == cache)
-    {
         return 0;
     }
 
-    ptr = cache->tail;
-    while (ptr != cache->head)
+    while (cache->tail != cache->head)
     {
-        ++i;
-        ++ptr;
-        if (ptr > cache->ptr + cache->capacity)
+        u8 c = *(cache->tail);
+        *buffer = c;
+        ++cache->tail;
+        ++buffer;
+        ++rlen;
+
+        if (cache->tail > cache->ptr + cache->capacity)
         {
-            ptr = cache->ptr;
+            cache->tail = cache->ptr;
+        }
+
+        if (c == 0x0D)
+        {
+            state |= 0x40;
+        }
+        if (c == 0x0A)
+        {
+            if (state & 0x40)
+            {
+                state = 0;
+                return rlen;
+            }
         }
     }
 
-    return i;
+    return rlen;
+}
+
+void Markr(tagRingCache* cache)
+{
+    if (NULL == cache)
+    {
+        return;
+    }
+
+    cache->tail = cache->head;
 }

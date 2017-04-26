@@ -14,70 +14,65 @@ typedef struct _tagUSARTConfig
 {
     u8  GPIOTx;
     u8  GPIORx;
-    u16 IRQChannel;
-    u16 Tx;
-    u16 Rx;
-    u16 vcc;
-    u32 ReMap;
-    u32 clk;
+    u8  IRQChannel;
+    u16 TXD;
+    u16 RXD;
+    u32 REMAP;
+    u32 APBGPIO;
     u32 APB;        // remap to USARTx
     USART_TypeDef* USARTx;
 } tagUSARTConfig;
 
-static tagUSARTConfig USARTGroup[USART_COM_COUNT] = {
-    { GPIO_A, GPIO_A, USART1_IRQn, GPIO_Pin_9,  GPIO_Pin_10,
-      0, 0, RCC_APB2Periph_GPIOA, RCC_APB2Periph_USART1, USART1 },
-    { GPIO_A, GPIO_A, USART2_IRQn, GPIO_Pin_2,  GPIO_Pin_3,
-      0, 0, RCC_APB2Periph_GPIOA, RCC_APB1Periph_USART2, USART2 },
-    { GPIO_B, GPIO_B, USART3_IRQn, GPIO_Pin_10, GPIO_Pin_11,
-      0, 0, RCC_APB2Periph_GPIOB, RCC_APB1Periph_USART3, USART3 },
-    { GPIO_C, GPIO_C, UART4_IRQn,  GPIO_Pin_10, GPIO_Pin_11,
-      0, 0, RCC_APB2Periph_GPIOC, RCC_APB1Periph_UART4,  UART4  },
-    { GPIO_C, GPIO_D, UART5_IRQn,  GPIO_Pin_12, GPIO_Pin_2,
-      0, 0, RCC_APB2Periph_GPIOC, RCC_APB1Periph_UART5,  UART5  },
+static tagUSARTConfig USARTGroup[MAX_USART_COM_COUNT] = {
+    { AGPIO, AGPIO, USART1_IRQn, GPIO_Pin_9,  GPIO_Pin_10, 0, RCC_APB2Periph_GPIOA, RCC_APB2Periph_USART1, USART1 },
+    { AGPIO, AGPIO, USART2_IRQn, GPIO_Pin_2,  GPIO_Pin_3,  0, RCC_APB2Periph_GPIOA, RCC_APB1Periph_USART2, USART2 },
+    { BGPIO, BGPIO, USART3_IRQn, GPIO_Pin_10, GPIO_Pin_11, 0, RCC_APB2Periph_GPIOB, RCC_APB1Periph_USART3, USART3 },
+    { CGPIO, CGPIO, UART4_IRQn,  GPIO_Pin_10, GPIO_Pin_11, 0, RCC_APB2Periph_GPIOC, RCC_APB1Periph_UART4,  UART4  },
+    { CGPIO, DGPIO, UART5_IRQn,  GPIO_Pin_12, GPIO_Pin_2,  0, RCC_APB2Periph_GPIOC, RCC_APB1Periph_UART5,  UART5  },
     // REMAP
-    { GPIO_B, GPIO_B, USART1_IRQn, GPIO_Pin_6,  GPIO_Pin_7,
-      0, GPIO_Remap_USART1,        RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, RCC_APB2Periph_USART1, USART1 },
-    { GPIO_D, GPIO_D, USART2_IRQn, GPIO_Pin_5,  GPIO_Pin_6,
-      0, GPIO_Remap_USART2,        RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO, RCC_APB1Periph_USART2, USART2 },
-    { GPIO_D, GPIO_D, USART3_IRQn, GPIO_Pin_8,  GPIO_Pin_9,
-      0, GPIO_FullRemap_USART3,    RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO, RCC_APB1Periph_USART3, USART3 },
-    { GPIO_C, GPIO_C, USART3_IRQn, GPIO_Pin_10, GPIO_Pin_11,
-      0, GPIO_PartialRemap_USART3, RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, RCC_APB1Periph_USART3, USART3 }
+    { BGPIO, BGPIO, USART1_IRQn, GPIO_Pin_6,  GPIO_Pin_7, GPIO_Remap_USART1,
+      RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, RCC_APB2Periph_USART1, USART1 },
+    { DGPIO, DGPIO, USART2_IRQn, GPIO_Pin_5,  GPIO_Pin_6, GPIO_Remap_USART2,
+      RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO, RCC_APB1Periph_USART2, USART2 },
+    { DGPIO, DGPIO, USART3_IRQn, GPIO_Pin_8,  GPIO_Pin_9, GPIO_FullRemap_USART3,
+      RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO, RCC_APB1Periph_USART3, USART3 },
+    { CGPIO, CGPIO, USART3_IRQn, GPIO_Pin_10, GPIO_Pin_11, GPIO_PartialRemap_USART3,
+      RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, RCC_APB1Periph_USART3, USART3 }
 };
 
-void usart_init(tagEUSART idx, u8 priority, u16* irq, u8 len, IRQ_CALLBACK_FUNC func)
+void InitUSARTCTRL(tagEUSART tag, u8 Priority, u8 SubPriority, u16* irq, u8 len, IRQ_CALLBACK_FUNC func)
 {
-    USART_InitTypeDef USART_InitStruct;
+    USART_InitTypeDef USART_InitStructure;
 
-    ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid USART index");
+    ASSERT((tag < MAX_USART_COM_COUNT), "invalid USART tag");
 
     // CLOCK
-    rcc_set_clock(USARTGroup[idx].clk, USARTGroup[idx].APB, ENABLE);
-    if (USART_COM_R0 <= idx)
+    InitAPBCLKCTRL(USARTGroup[tag].APBGPIO, ENABLE);
+    InitAPBCLKCTRL(USARTGroup[tag].APB, ENABLE);
+    if (tag > USART_COM_R0)
     {
-        GPIO_PinRemapConfig(USARTGroup[idx].ReMap, ENABLE);
+        GPIO_PinRemapConfig(USARTGroup[tag].REMAP, ENABLE);
     }
 
     // GPIO
-    // TX
-    gpio_init(USARTGroup[idx].GPIOTx, USARTGroup[idx].Tx, (u8)GPIO_Mode_AF_PP, (u8)GPIO_Speed_50MHz);
-    // RX
-    gpio_init(USARTGroup[idx].GPIORx, USARTGroup[idx].Rx, (u8)GPIO_Mode_IN_FLOATING, (u8)GPIO_Speed_50MHz);
+    // TXD
+    InitGPIOCTRL(USARTGroup[tag].GPIOTx, USARTGroup[tag].TXD, (u8)GPIO_Mode_AF_PP, (u8)GPIO_Speed_50MHz);
+    // RXD
+    InitGPIOCTRL(USARTGroup[tag].GPIORx, USARTGroup[tag].RXD, (u8)GPIO_Mode_IN_FLOATING, (u8)GPIO_Speed_50MHz);
 
     // USART
-    USART_InitStruct.USART_BaudRate = 115200;
-    USART_InitStruct.USART_WordLength = USART_WordLength_8b;
-    USART_InitStruct.USART_StopBits = USART_StopBits_1;
-    USART_InitStruct.USART_Parity = USART_Parity_No;
-    USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_InitStruct.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-    USART_Init(USARTGroup[idx].USARTx, &USART_InitStruct);
-    USART_Cmd(USARTGroup[idx].USARTx, ENABLE);
+    USART_InitStructure.USART_BaudRate            = 115200;
+    USART_InitStructure.USART_WordLength          = USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits            = USART_StopBits_1;
+    USART_InitStructure.USART_Parity              = USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode                = USART_Mode_Rx | USART_Mode_Tx;
+    USART_Init(USARTGroup[tag].USARTx, &USART_InitStructure);
+    USART_Cmd(USARTGroup[tag].USARTx, ENABLE);
 
     if (NULL != func)
     {
-        set_irq_handler(idx, func);
+        SetIRQHandler(tag, func);
     }
 
     // NVIC
@@ -86,43 +81,56 @@ void usart_init(tagEUSART idx, u8 priority, u16* irq, u8 len, IRQ_CALLBACK_FUNC 
         u8 i = 0;
         while (i < len)
         {
-            USART_ITConfig(USARTGroup[idx].USARTx, *(irq + i), ENABLE);
+            USART_ITConfig(USARTGroup[tag].USARTx, *(irq + i), ENABLE);
             ++i;
         }
     }
-
-    nvic_init(USARTGroup[idx].IRQChannel, priority, 0);
+    InitNVICCTRL(NVIC_PriorityGroup_3, USARTGroup[tag].IRQChannel, Priority, SubPriority);
 }
 
-void usart_send_data(tagEUSART idx, u8* data, u32 len)
+void USARTSendData(tagEUSART tag, u8* data, u32 len)
 {
     u32 i = 0;
     u8* ptr = data;
-    ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid USART index");
+    ASSERT((tag < MAX_USART_COM_COUNT), "invalid USART tag");
     for (; i < len; ++i)
     {
-        USART_SendData(USARTGroup[idx].USARTx, *ptr++);
-        while (USART_GetFlagStatus(USARTGroup[idx].USARTx, USART_FLAG_TXE) == RESET);
+        USART_SendData(USARTGroup[tag].USARTx, *ptr++);
+        while (USART_GetFlagStatus(USARTGroup[tag].USARTx, USART_FLAG_TXE) == RESET);
     }
 }
 
-u8 usart_recv_data(tagEUSART idx, u8* c)
+u8 USARTRecvData(tagEUSART tag, u8* c)
 {
-    ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid USART index");
-    if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
+    ASSERT((tag < MAX_USART_COM_COUNT), "invalid USART tag");
+    ASSERT(NULL != c, "invalid char buffer");
+    if (USART_GetITStatus(USARTGroup[tag].USARTx, USART_FLAG_RXNE) != RESET)
     {
-        *c = USART_ReceiveData(USART3);
+        *c = USART_ReceiveData(USARTGroup[tag].USARTx);
         return 1;
     }
     return 0;
 }
 
-u8 usart_is_ok(tagEUSART idx, u16 irq)
+u8 USARTCheckStatus(tagEUSART tag, u16 irq)
 {
-    ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid USART index");
-    if (RESET != USART_GetITStatus(USARTGroup[idx].USARTx, irq))
+    ASSERT((tag < MAX_USART_COM_COUNT), "invalid USART tag");
+    if (RESET != USART_GetITStatus(USARTGroup[tag].USARTx, irq))
     {
         return 1;
     }
     return 0;
+}
+
+void InitUSARTIRQ(tagEUSART tag, u16* irq, u8 len, u8 state)
+{
+    if (NULL != irq)
+    {
+        u8 i = 0;
+        while (i < len)
+        {
+            USART_ITConfig(USARTGroup[tag].USARTx, *(irq + i), state);
+            ++i;
+        }
+    }
 }

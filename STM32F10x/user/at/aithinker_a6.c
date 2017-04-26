@@ -1,18 +1,15 @@
 #include "aithinker_a6.h"
 #include "usart/usart.h"
 #include "util/util.h"
+#include "transfer/transfer.h"
 #include "buffer/buffer.h"
-#include "led/led.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_usart.h"
 #include "debug/debug.h"
+#include "stm32f10x_usart.h"
 
 enum
 {
     AT_STATE_IDLE,
-    AT_STATE_SEND,
-    AT_STATE_RECV,
-    AT_STATE_TIMEOUT
+    AT_STATE_BUSY
 };
 
 enum
@@ -58,68 +55,59 @@ static tagATCommand AT_TABLE[] = {
     { AT_CMD_CUSTOM,       NULL,               NULL,       "+CME" }
 };
 
-static tagATCommand* curCommand = &AT_TABLE[AT_CMD_NONE];
-static u8 a6     = USART_COM_INVALID;
-static u8 target = USART_COM_INVALID;
-static u8 buffer[MAX_CACHE_SIZE];
-static ring_cache dummy;
-static ring_cache* cache = &dummy;
+static tagEUSART a6  = USART_COM_INVALID;
 static u8 recv_state = 0;
 static u8 a6_state = AT_STATE_IDLE;
+static u16 irq = USART_IT_RXNE;
+static tagRingCache* cache = NULL;
+static tagATCommand* curCommand = &AT_TABLE[AT_CMD_NONE];
+static u8 buffer[MAX_CACHE_SIZE] = { 0 };
 
 s8 _send(u8* cmd, u32 len);
 
 //////////////////////////////////////////////////////////////////////
-void a6_irq_handler(void)
+void A6_IRQ_Handler(void)
 {
     u8 r;
-    if (0 != usart_recv_data(a6, &r))
+    if (0 != USARTRecvData(a6, &r))
     {
-        if (a6_state != AT_STATE_SEND)
+        WriteChar(cache, r);
+        if (r == 0x0D)
         {
-            console("%c", (u8)(r));
+            recv_state = 1;
         }
-        else
+        else if (r == 0x0A)
         {
-            write_cache_char(cache, &r);
-            if (r == 0x0D)
-            {
-                recv_state = 1;
-            }
-            else if (r == 0x0A)
-            {
-                recv_state = 0;
-                a6_state = AT_STATE_RECV;
-                transmit(a6, target);
-            }
+            recv_state = 0;
+            a6_state = AT_STATE_BUSY;
+            transmit(a6);
         }
     }
 }
-
 // send data to target
 
 #ifdef _DEBUG
-void a6_data_handler(u8* data, u32 len)
+void OnGPRSData(u8* data, u32 len)
 {
     u8* ptr = data;
     u8* cmd = NULL;
     ASSERT(NULL != data, "invalid data received from debugger");
     if ('$' != *ptr)
     {
-        console("not an valid super command, should start with \"$\", cmd: %s", data);
+        console("command should start with $, e.g. $[0-9]$", data);
         return;
     }
 
     ++ptr;
     if ('0' > *ptr || '9' < *ptr)
     {
-        console("not an valid super command, must be 0-9, cmd: %s", data);
+        console("command should start with $, e.g. $[0-9]$", data);
         return;
     }
 
     if ('9' == *ptr && '$' == *(ptr + 1))
     {
-        send_data(ptr + 3, len - 3);
+        SendData(1, ptr + 3, len - 3);
     }
 
     if ('0' == *ptr && '$' == *(ptr + 1))
@@ -159,178 +147,150 @@ void a6_data_handler(u8* data, u32 len)
         cmd = "AT+CIFSR\r\n";
     }
     console("send [%s]", cmd);
-    if (_send(cmd, 0) < 0)
+    if (SendData(0, cmd, digitLength(cmd)) < 0)
     {
         console("command send time out, cmd: %s", cmd);
     }
 }
 #else
-void a6_data_handler(u8* data, u32 len)
+void OnGPRSData(u8* data, u32 len)
 {}
 #endif
 
-
-////////////////////////////////////////////////////////////////////////
-void a6_init(u8 idx, u16* irq, u8 len, u8 a6_target)
+void IRQEnable()
 {
-    ASSERT((idx >= 0 && idx < USART_COM_COUNT), "invalid usart index");
-    ring_cache_init(cache, buffer, MAX_CACHE_SIZE);
-#ifdef _DEBUG
-    reg(idx, cache, a6_data_handler);
-#else
-    reg(idx, cache, a6_data_handler);
-#endif
-    a6 = idx;
-    target = a6_target;
-    usart_init(idx, 3, irq, len, a6_irq_handler);
+    InitUSARTIRQ(a6, &irq, 1, ENABLE);
 }
 
-s8 check(u32 delay) // ms
+void IRQDisable()
 {
-    if (delay == 0)
-    {
-        delay = 60 * 1000;
-    }
+    InitUSARTIRQ(a6, &irq, 1, DISABLE);
+}
 
-    // wait
+////////////////////////////////////////////////////////////////////////
+void A6Init(tagEUSART tag, u16* irq, u8 len, tagEUSART target)
+{
+    ASSERT((tag > USART_COM_INVALID && tag < MAX_USART_COM_COUNT), "invalid USART tag");
+    cache = InitRingCache(buffer, MAX_CACHE_SIZE);
+    ASSERT(NULL != cache, "OOM, failed to init cache");
+    Register(tag, target, cache, OnGPRSData);
+    a6 = tag;
+    InitUSARTCTRL(tag, 3, 0, irq, len, A6_IRQ_Handler);
+}
+
+u8 WaitOK(void)
+{
+    u8  data[80] = { 0 };
+    u8  rx_state = 0;
+    u8  c = 0;
+    u8  flag = 0;
+    u32 timeout = 60 * 1000;
+    u8  ko = 0;
+    while (timeout > 0)
     {
-        u32 cost = 0;
-        u32 period = 1000;
-        while (AT_STATE_RECV != a6_state)
+        if (USARTRecvData(a6, &c) != 0)
         {
-            if (cost < delay)
+            data[rx_state & 0x7F] = c;
+            ++rx_state;
+            if (flag & 0x80)
             {
-                wait(period);
-                cost += period;
+                if (c == 0x0A)
+                {
+                    flag = 0;
+                    data[rx_state & 0x7F] = '\0';
+                    ko = findString(data, rx_state & 0x7F, "+CREG:");
+                    if (ko > 0)
+                    {
+                        InitUSARTIRQ(a6, &irq, 1, ENABLE);
+                        return 1;
+                    }
+                    else
+                    {
+                        zero(data, 80);
+                    }
+                }
             }
             else
             {
-                console("wait time out[at id: %d]", curCommand->id);
-                return -1;
+                if (c == 0x0D)
+                {
+                    flag |= 0x80;
+                }
             }
         }
-    }
-
-    a6_state = AT_STATE_IDLE;
-
-    if (0 != curCommand->ok)
-    {
-        if (cache_find_string(cache, curCommand->ok)> 0)
+        else
         {
-            // find the expect response
-            return 1;
+            wait(100);
+            timeout -= 100;
         }
     }
 
+    console("wait a6 ok time out");
     return 0;
 }
 
-s8 _send(u8* cmd, u32 len)
-{
-    s8 rc = 0;
-    if (NULL == cmd)
-    {
-        console("try to send invalid data");
-        return -1;
-    }
-
-    if (0 == len)
-    {
-        len = str_len(cmd);
-    }
-    curCommand = &AT_TABLE[AT_CMD_CIPDATA];
-    usart_send_data(a6, cmd, len);
-    a6_state = AT_STATE_SEND; // send over, change the state
-    rc = check(0);
-    if (rc < 0)
-    {
-        console("wait response time out, cmd: %s, id: %d", cmd, curCommand->id);
-        markr(cache);
-        return rc;
-    }
-
-    return 0;
-}
-
-s8 dial(u8* target, u32 port)
+s8 Dial(u8* target, u16 port)
 {
     u8 cmd[50] = { 0 };
+    u32 len = 0;
     curCommand = &AT_TABLE[AT_CMD_CIPSTART];
     snprintf((char*)cmd, 50, "%s\"TCP\",\"%s\",%u\r\n", curCommand->cmd, target, port);
-    return _send(cmd, 0);
+    len = digitLength(cmd);
+    return SendData(0, cmd, len);
 }
 
-s8 _begin()
+
+s8   SendDataLR()
+{
+    u8* cmd = "\r\n";
+    return SendData(0, cmd, 2);
+}
+
+s8 SendDataBegin()
 {
     u8* cmd = NULL;
+    u32 len = 0;
     curCommand = &AT_TABLE[AT_CMD_CIPSEND];
     cmd = curCommand->cmd;
-    return _send(cmd, 0);
+    len = digitLength(cmd);
+    SendData(0, cmd, len);
+    return SendDataLR();
 }
 
-s8 _end()
+s8 SendDataEnd()
 {
-    u8 cmd[2];
-    cmd[0] = 0x1A;
-    cmd[1] = '\0';
-    curCommand = &AT_TABLE[AT_CMD_CIPDATA_DONE];
-    if (_send(cmd, 1) < 0)
+    u8 cmd[] = { 0x1A };
+    SendData(0, cmd, 1);
+    return SendDataLR();
+}
+
+s8   SendData(u8 RAW, u8* data, u32 len)
+{
+    if (NULL == data)
     {
-        console("command timeout");
         return -1;
     }
-    //TODO: handler response
+
+    if (RAW)
+    {
+        SendDataBegin();
+        USARTSendData(a6, data, len);
+        SendDataEnd();
+    }
+    else
+    {
+        USARTSendData(a6, data, len);
+    }
+    
     return 0;
 }
 
-s8 send_data(u8* data, u32 len)
-{
-    s8 r = 0;
-    // send at command
-    r = _begin();
-    if (r < 0)
-    {
-        console("command time out");
-        return r;
-    }
-    // data to send
-    r = _send(data, len);
-    if (r < 0)
-    {
-        console("send user data time out, data: %s", data);
-        return r;
-    }
-    // send done char
-    r = _end();
-    if (r < 0)
-    {
-        console("send command 0x1A response timeout");
-        return r;
-    }
-
-    return 0;
-}
-
-s8 close()
+s8   Close(void)
 {
     u8* cmd = NULL;
     u32 len = 0;
     curCommand = &AT_TABLE[AT_CMD_CIPCLOSE];
     cmd = curCommand->cmd;
-    len = str_len(cmd);
-    return _send(cmd, len);
-}
-
-void send_cmd(u8* cmd)
-{
-    u32 len = str_len(cmd);
-    s8 r = 0;
-    ASSERT(NULL != cmd, "invalid cmd in");
-    curCommand = &AT_TABLE[AT_CMD_CUSTOM];
-    curCommand->ok = 0;
-    r = _send(cmd, len);
-    if (r < 0)
-    {
-        console("command: %s timeout", cmd);
-    }
+    len = digitLength(cmd);
+    return SendData(0, cmd, len);
 }

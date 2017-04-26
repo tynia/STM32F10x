@@ -8,15 +8,15 @@ enum
     USART_IRQ_3 = 2,
     USART_IRQ_4 = 3,
     USART_IRQ_5 = 4,
-    USART_IRQ_COUNT
+    MAX_USART_IRQ_COUNT
 };
 
-static IRQ_CALLBACK_FUNC irq[USART_IRQ_COUNT];
+static IRQ_CALLBACK_FUNC irq[MAX_USART_IRQ_COUNT];
 
-void set_irq_handler(u8 idx, IRQ_CALLBACK_FUNC func)
+void SetIRQHandler(u8 tag, IRQ_CALLBACK_FUNC func)
 {
-    ASSERT((idx >= USART_IRQ_1 && idx < USART_IRQ_COUNT), "invalid USART IRQ index");
-    irq[idx] = func;
+    ASSERT((tag < MAX_USART_IRQ_COUNT), "invalid USART IRQ tag");
+    irq[tag] = func;
 }
 
 void USART1_IRQHandler(void)

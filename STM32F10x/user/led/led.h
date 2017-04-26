@@ -12,20 +12,15 @@ typedef enum _tagELED
     LED_E,
     LED_F,
     LED_G,
-    LED_COUNT,
+    LED_END,
 } tagELED;
 
-void led_init(tagELED idx, u8 pinx);
+void InitLED(tagELED tag, u8 xPin);
 
-void led_on(tagELED idx, u16 pin);
+void LEDOn(tagELED tag, u16 xPin);
 
-void led_off(tagELED idx, u16 pin);
-/*
- * @function: make led2 twinkle
- * @param:
- * @times: twinkle specified times
- * @timespan: the period time of led on and led off. passing value 0 means to use default clock cycle 1000000.
- **/
-void led_twinkle(tagELED idx, u16 Pin, u32 times, u32 timespan);
+void LEDOff(tagELED tag, u16 xPin);
+
+void LEDTwinkle(tagELED tag, u16 xPin, u32 times, u32 timespan);
 
 #endif

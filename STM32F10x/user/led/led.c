@@ -1,55 +1,52 @@
+#include "stm32f10x_gpio.h"
 #include "led.h"
 #include "gpio/gpio.h"
 #include "debug/debug.h"
 #include "util/util.h"
-#include "stm32f10x_gpio.h"
 
-enum
-{
-    LED_ON = 0,
-    LED_OFF = !LED_ON,
-};
-static u8 LED_TABLE[LED_COUNT] = { 0 };
+#define MAX_LED_COUNT LED_END
+#define ENABLE(x) (state & (1 << x))
+static u8 state = 0;
 
-void led_init(tagELED idx, u8 pinx)
+void InitLED(tagELED tag, u8 xPin)
 {
-    ASSERT((idx < LED_COUNT && idx >= LED_A), "invalid LED index");
-    gpio_init(idx, pinx, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
-    LED_TABLE[idx] = 1;
-    gpio_set_bits(idx, pinx, 1);
+    ASSERT((tag < LED_END), "invalid LED tag");
+    InitGPIOCTRL(tag, xPin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
+    state |= (1 << tag);
+    Disable(tag, xPin);
 }
 
-void led_on(tagELED idx, u16 pinx)
+void LEDOn(tagELED tag, u16 xPin)
 {
-    ASSERT((idx < LED_COUNT && idx >= LED_A), "invalid LED index");
-    gpio_set_bits(idx, pinx, LED_ON);
+    ASSERT((tag < LED_END), "invalid LED tag");
+    Enable(tag, xPin);
 }
 
-void led_off(tagELED idx, u16 pinx)
+void LEDOff(tagELED tag, u16 xPin)
 {
-    ASSERT((idx < LED_COUNT && idx >= LED_A), "invalid LED index");
-    gpio_set_bits(idx, pinx, LED_OFF);
+    ASSERT((tag < LED_END), "invalid LED tag");
+    Disable(tag, xPin);
 }
 
-void twinkle(tagELED idx, u16 pinx, u32 timespan)
+void twinkle(tagELED tag, u16 xPin, u32 timespan)
 {
-    ASSERT((idx < LED_COUNT && idx >= LED_A), "invalid LED index");
-    if (0 != LED_TABLE[idx])
+    ASSERT((tag < LED_END), "invalid LED tag");
+    if (ENABLE(tag))
     {
-        led_on(idx, pinx);
+        LEDOn(tag, xPin);
         wait(timespan);
-        led_off(idx, pinx);
+        LEDOff(tag, xPin);
         wait(timespan);
     }
 }
 
-void led_twinkle(tagELED idx, u16 pinx, u32 times, u32 timespan)
+void LEDTwinkle(tagELED tag, u16 xPin, u32 times, u32 timespan)
 {
     u32 i = 0;
-    ASSERT((idx < LED_COUNT && idx >= LED_A), "invalid LED index");
+    ASSERT((tag < LED_END), "invalid LED tag");
     while (i < times)
     {
-        twinkle(idx, pinx, timespan);
+        twinkle(tag, xPin, timespan);
         ++i;
     }
 }

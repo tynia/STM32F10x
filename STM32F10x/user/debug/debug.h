@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 typedef void(*DEBUG_CALLBACK)(u8* data, u32 len);
-DEBUG_CALLBACK set_debug_handler(DEBUG_CALLBACK callback);
+DEBUG_CALLBACK SetDebugOutHandler(DEBUG_CALLBACK callback);
 
 void panic(void);
 void console(const char* fmt, ...);

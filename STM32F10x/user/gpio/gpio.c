@@ -1,16 +1,18 @@
 #include "gpio.h"
-#include "util/util.h"
 #include "debug/debug.h"
-#include "stm32f10x_rcc.h"
+#include "rcc/rcc.h"
 #include "stm32f10x_gpio.h"
+#include "stm32f10x_rcc.h"
 
 typedef struct _tagGPIO
 {
-    u32 GPIO_Periph;
+    u32 APBGPIOx;
     GPIO_TypeDef* GPIOx;
 } tagGPIO;
 
-static tagGPIO GPIOGroup[GPIO_COUNT] = {
+#define MAX_GPIO_COUNT xGPIO_END
+
+static tagGPIO GPIOGroup[MAX_GPIO_COUNT] = {
     { RCC_APB2Periph_GPIOA, GPIOA },
     { RCC_APB2Periph_GPIOB, GPIOB },
     { RCC_APB2Periph_GPIOC, GPIOC },
@@ -20,27 +22,25 @@ static tagGPIO GPIOGroup[GPIO_COUNT] = {
     { RCC_APB2Periph_GPIOG, GPIOG }
 };
 
-void gpio_init(tagEGPIO idx, u16 pinx, u8 mode, u8 speed)
+void InitGPIOCTRL(tagEGPIO xGPIO, u16 xPin, u8 Mode, u8 Speed)
 {
-    GPIO_InitTypeDef GPIO_InitStruct;
-    ASSERT((idx >= 0 && idx < GPIO_COUNT), "invalid GPIO index");
-    RCC_APB2PeriphClockCmd(GPIOGroup[idx].GPIO_Periph, ENABLE);
-    GPIO_InitStruct.GPIO_Pin = pinx;
-    GPIO_InitStruct.GPIO_Mode = (GPIOMode_TypeDef)mode;
-    GPIO_InitStruct.GPIO_Speed = (GPIOSpeed_TypeDef)speed;
-    GPIO_Init(GPIOGroup[idx].GPIOx, &GPIO_InitStruct);
+    GPIO_InitTypeDef GPIO_InitStructure;
+    ASSERT(xGPIO < xGPIO_END, "invalid GPIO index");
+    InitAPBCLKCTRL(GPIOGroup[xGPIO].APBGPIOx, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = xPin;
+    GPIO_InitStructure.GPIO_Mode = (GPIOMode_TypeDef)Mode;
+    GPIO_InitStructure.GPIO_Speed = (GPIOSpeed_TypeDef)Speed;
+    GPIO_Init(GPIOGroup[xGPIO].GPIOx, &GPIO_InitStructure);
 }
 
-void gpio_set_bits(tagEGPIO idx, u16 pin, u8 on)
+void Enable(tagEGPIO xGPIO, u16 xPin)
 {
-    ASSERT((idx >= 0 && idx < GPIO_COUNT), "invalid GPIO index");
+    ASSERT(xGPIO < xGPIO_END, "invalid GPIO index");
+    GPIO_ResetBits(GPIOGroup[xGPIO].GPIOx, xGPIO);
+}
 
-    if (0 != on)
-    {
-        GPIO_SetBits(GPIOGroup[idx].GPIOx, pin);
-    }
-    else
-    {
-        GPIO_ResetBits(GPIOGroup[idx].GPIOx, pin);
-    }
+void Disable(tagEGPIO xGPIO, u16 xPin)
+{
+    ASSERT(xGPIO < xGPIO_END, "invalid GPIO index");
+    GPIO_SetBits(GPIOGroup[xGPIO].GPIOx, xGPIO);
 }

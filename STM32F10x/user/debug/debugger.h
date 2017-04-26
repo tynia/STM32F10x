@@ -2,8 +2,8 @@
 #define _STM32_DEBUGGER_H_
 
 #include "stm32f10x.h"
+#include "usart/usart.h"
 
-void debugger_init(u8 idx, u8 debug_target);
+void InitDebugger(tagEUSART tag, tagEUSART target);
 
-void debug_in();
 #endif

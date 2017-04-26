@@ -1,11 +1,11 @@
 #include "debug.h"
 #include "util/util.h"
 
-DEBUG_CALLBACK debug_cb = NULL;
-DEBUG_CALLBACK set_debug_handler(DEBUG_CALLBACK callback)
+DEBUG_CALLBACK cb = NULL;
+DEBUG_CALLBACK SetDebugOutHandler(DEBUG_CALLBACK callback)
 {
-    DEBUG_CALLBACK old = debug_cb;
-    debug_cb = callback;
+    DEBUG_CALLBACK old = cb;
+    cb = callback;
     return old;
 }
 
@@ -21,14 +21,14 @@ void panic()
 static char buffer[CONSOLE_BUFFER_SIZE];
 void console(const char* fmt, ...)
 {
-    if (NULL != debug_cb)
+    if (NULL != cb)
     {
         va_list args;
         u32 len = 0;
         va_start(args, fmt);
         vsnprintf(buffer, CONSOLE_BUFFER_SIZE, fmt, args);
         va_end(args);
-        len = str_len(buffer);
-        debug_cb(buffer, len);
+        len = digitLength((u8*)buffer);
+        cb((u8*)buffer, len);
     }
 }

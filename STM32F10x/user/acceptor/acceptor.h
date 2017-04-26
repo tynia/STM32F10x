@@ -2,7 +2,8 @@
 #define _STM32_EXCHANGER_H_
 
 #include "stm32f10x.h"
+#include "usart/usart.h"
 
-void acceptor_init(u8 idx, u16* irq, u8 len, u8 acceptor_target);
+void InitAcceptor(tagEUSART tag, u16* irq, u8 len, tagEUSART target);
 
 #endif

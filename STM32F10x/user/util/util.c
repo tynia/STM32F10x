@@ -1,5 +1,10 @@
 #include "util.h"
 #include <stdio.h>
+#include <string.h>
+
+enum {
+    LED_TWINKLE_DELAY = 1000, /* ms: 1000 x 1000 times system time cycle */
+};
 
 void wait(u32 ms) // ms
 {
@@ -15,7 +20,7 @@ void wait(u32 ms) // ms
     for (; i < ms; ++i);
 }
 
-u8  str_cmp(u8* src, u8* dst, u32 len)
+u8  equel(u8* src, u8* dst, u32 len)
 {
     u32 i = 0;
     if (NULL == src || NULL == dst)
@@ -35,17 +40,18 @@ u8  str_cmp(u8* src, u8* dst, u32 len)
     return 0;
 }
 
-u32 str_len(u8* str)
+u32 digitLength(u8* str)
 {
     u32 i = 0;
+    u8* ptr = str;
     if (NULL == str)
     {
         return 0;
     }
     
-    while (*str)
+    while (*ptr != '\0')
     {
-        ++str;
+        ++ptr;
         ++i;
     }
 
@@ -88,4 +94,19 @@ void zero(u8* buffer, u32 len)
     {
         *(buffer + i) = 0;
     }
+}
+
+s8   findString(u8* data, u32 len, u8* mark)
+{
+    u8* ptr = NULL;
+    if (NULL == data)
+    {
+        return -1;
+    }
+    ptr = (u8*)strstr((const char*)data, (const char*)mark);
+    if (NULL != ptr)
+    {
+        return 1;
+    }
+    return 0;
 }
