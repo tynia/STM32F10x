@@ -45,5 +45,5 @@ void InitAcceptor(tagEUSART tag, u16* irq, u8 len, tagEUSART target)
     ASSERT(NULL == cache, "OOM, failed to init cache");
     Register(tag, target, cache, OnAcceptorData);
     acceptor = tag;
-    InitUSARTCTRL(tag, 1, 0, irq, len, AcceptorIRQHandler);
+    InitUSARTCTRL(tag, 0, 2, irq, len, AcceptorIRQHandler);
 }

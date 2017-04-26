@@ -47,5 +47,5 @@ void InitDebugger(tagEUSART tag, tagEUSART target)
     Register(tag, target, cache, OnDebugData);
     debugger = tag;
     SetDebugOutHandler(OnDebugData);
-    InitUSARTCTRL(tag, 1, 0, &irq, 1, DebuggerIRQHandler);
+    InitUSARTCTRL(tag, 0, 3, &irq, 1, DebuggerIRQHandler);
 }

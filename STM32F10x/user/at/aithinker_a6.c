@@ -173,7 +173,7 @@ void A6Init(tagEUSART tag, u16* irq, u8 len, tagEUSART target)
     ASSERT(NULL == cache, "OOM, failed to init cache");
     Register(tag, target, cache, OnGPRSData);
     a6 = tag;
-    InitUSARTCTRL(tag, 1, 0, irq, len, A6_IRQ_Handler);
+    InitUSARTCTRL(tag, 0, 1, irq, len, A6_IRQ_Handler);
 }
 
 u8 WaitOK(void)
