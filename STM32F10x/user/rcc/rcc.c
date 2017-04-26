@@ -1,7 +1,6 @@
 #include "rcc.h"
-#include "stm32f10x_rcc.h"
 
-void InitAPBCLKCTRL(u32 APB, u8 state)
+void InitAPBCLKCTRL(u32 APB, FunctionalState state)
 {
     if (IS_RCC_APB1_PERIPH(APB))
     {

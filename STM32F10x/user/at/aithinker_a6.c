@@ -63,8 +63,6 @@ static tagRingCache* cache = NULL;
 static tagATCommand* curCommand = &AT_TABLE[AT_CMD_NONE];
 static u8 buffer[MAX_CACHE_SIZE] = { 0 };
 
-s8 _send(u8* cmd, u32 len);
-
 //////////////////////////////////////////////////////////////////////
 void A6_IRQ_Handler(void)
 {
@@ -94,14 +92,14 @@ void OnGPRSData(u8* data, u32 len)
     ASSERT(NULL != data, "invalid data received from debugger");
     if ('$' != *ptr)
     {
-        console("command should start with $, e.g. $[0-9]$", data);
+        console("command should start with $, e.g. $[0-9]$");
         return;
     }
 
     ++ptr;
     if ('0' > *ptr || '9' < *ptr)
     {
-        console("command should start with $, e.g. $[0-9]$", data);
+        console("command should start with $, e.g. $[0-9]$");
         return;
     }
 
@@ -175,7 +173,7 @@ void A6Init(tagEUSART tag, u16* irq, u8 len, tagEUSART target)
     ASSERT(NULL == cache, "OOM, failed to init cache");
     Register(tag, target, cache, OnGPRSData);
     a6 = tag;
-    InitUSARTCTRL(tag, 3, 0, irq, len, A6_IRQ_Handler);
+    InitUSARTCTRL(tag, 1, 0, irq, len, A6_IRQ_Handler);
 }
 
 u8 WaitOK(void)

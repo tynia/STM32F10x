@@ -11,7 +11,7 @@ typedef enum _tagEUSART
     USART_COM_3 = 2,
     USART_COM_4 = 3,
     USART_COM_5 = 4,
-    USART_COM_R0, // USART REMAP BEGIN
+    USART_COM_R0 = 4, // USART REMAP BEGIN
     USART_COM_R1 = 5,
     USART_COM_R2 = 6,
     USART_COM_R3 = 7,
@@ -30,6 +30,6 @@ u8   USARTRecvData(tagEUSART tag, u8* c);
 
 u8   USARTCheckStatus(tagEUSART tag, u16 irq);
 
-void InitUSARTIRQ(tagEUSART tag, u16* irq, u8 len, u8 state);
+void InitUSARTIRQ(tagEUSART tag, u16* irq, u8 len, FunctionalState state);
 
 #endif

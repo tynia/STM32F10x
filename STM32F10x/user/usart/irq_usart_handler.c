@@ -8,6 +8,10 @@ enum
     USART_IRQ_3 = 2,
     USART_IRQ_4 = 3,
     USART_IRQ_5 = 4,
+    USART_IRQ_R1 = 0,
+    USART_IRQ_R2 = 1,
+    USART_IRQ_PR3 = 2,
+    USART_IRQ_FR3 = 2,
     MAX_USART_IRQ_COUNT
 };
 

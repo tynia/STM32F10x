@@ -76,6 +76,7 @@ void InitUSARTCTRL(tagEUSART tag, u8 Priority, u8 SubPriority, u16* irq, u8 len,
     }
 
     // NVIC
+    InitNVICCTRL(NVIC_PriorityGroup_0, USARTGroup[tag].IRQChannel, Priority, SubPriority);
     if (NULL != irq)
     {
         u8 i = 0;
@@ -85,7 +86,6 @@ void InitUSARTCTRL(tagEUSART tag, u8 Priority, u8 SubPriority, u16* irq, u8 len,
             ++i;
         }
     }
-    InitNVICCTRL(NVIC_PriorityGroup_3, USARTGroup[tag].IRQChannel, Priority, SubPriority);
 }
 
 void USARTSendData(tagEUSART tag, u8* data, u32 len)
@@ -122,7 +122,7 @@ u8 USARTCheckStatus(tagEUSART tag, u16 irq)
     return 0;
 }
 
-void InitUSARTIRQ(tagEUSART tag, u16* irq, u8 len, u8 state)
+void InitUSARTIRQ(tagEUSART tag, u16* irq, u8 len, FunctionalState state)
 {
     if (NULL != irq)
     {
