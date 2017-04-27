@@ -18,8 +18,8 @@ typedef enum _tagEGPIO
 
 void InitGPIOCTRL(tagEGPIO xGPIO, u16 xPin, u8 Mode, u8 Speed);
 
-void Enable(tagEGPIO xGPIO, u16 xPin);
+void LLevel(tagEGPIO xGPIO, u16 xPin);
 
-void Disable(tagEGPIO xGPIO, u16 xPin);
+void HLevel(tagEGPIO xGPIO, u16 xPin);
 
 #endif

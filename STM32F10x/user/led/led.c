@@ -13,19 +13,19 @@ void InitLED(tagELED tag, u8 xPin)
     ASSERT((tag < LED_END), "invalid LED tag");
     InitGPIOCTRL(tag, xPin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
     state |= (1 << tag);
-    Disable(tag, xPin);
+    //LLevel(tag, xPin);
 }
 
 void LEDOn(tagELED tag, u16 xPin)
 {
     ASSERT((tag < LED_END), "invalid LED tag");
-    Enable(tag, xPin);
+    LLevel(tag, xPin);
 }
 
 void LEDOff(tagELED tag, u16 xPin)
 {
     ASSERT((tag < LED_END), "invalid LED tag");
-    Disable(tag, xPin);
+    HLevel(tag, xPin);
 }
 
 void twinkle(tagELED tag, u16 xPin, u32 timespan)

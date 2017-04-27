@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "usart/usart.h"
 #include "buffer/buffer.h"
+#include "led/led.h"
 #include "transfer/transfer.h"
 #include "stm32f10x_usart.h"
 
@@ -21,20 +22,20 @@ void OnDebugData(u8* data, u32 len)
 
 void DebuggerIRQHandler(void)
 {
-    u8 r;
+    u8 r = 0;
     if (0 != USARTRecvData(debugger, &r))
     {
-        console("%c", r);
-//         WriteChar(cache, &r);
-//         if (r == 0x0D)
-//         {
-//             recv_state = 1;
-//         }
-//         else if (r == 0x0A)
-//         {
-//             recv_state = 0;
-//             transmit(debugger);
-//         }
+        //console("%c", r);
+        WriteChar(cache, r);
+        if (r == 0x0D)
+        {
+            recv_state = 1;
+        }
+        else if (r == 0x0A)
+        {
+            recv_state = 0;
+            transmit(debugger);
+        }
     }
 }
 
@@ -43,9 +44,9 @@ void InitDebugger(tagEUSART tag, tagEUSART target)
     u16 irq;
     irq = USART_IT_RXNE;
     cache = InitRingCache(buffer, MAX_CACHE_SIZE);
-    ASSERT(NULL == cache, "OOM, failed to init cache");
+    ASSERT(NULL != cache, "OOM, failed to init cache");
     Register(tag, target, cache, OnDebugData);
     debugger = tag;
     SetDebugOutHandler(OnDebugData);
-    InitUSARTCTRL(tag, 0, 3, &irq, 1, DebuggerIRQHandler);
+    InitUSARTCTRL(tag, 1, 0, &irq, 1, DebuggerIRQHandler);
 }

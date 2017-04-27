@@ -66,7 +66,7 @@ static u8 buffer[MAX_CACHE_SIZE] = { 0 };
 //////////////////////////////////////////////////////////////////////
 void A6_IRQ_Handler(void)
 {
-    u8 r;
+    u8 r = 0;
     if (0 != USARTRecvData(a6, &r))
     {
         WriteChar(cache, r);
@@ -85,7 +85,7 @@ void A6_IRQ_Handler(void)
 // send data to target
 
 #ifdef _DEBUG
-void OnGPRSData(u8* data, u32 len)
+void OnGPRSCommandData(u8* data, u32 len)
 {
     u8* ptr = data;
     u8* cmd = NULL;
@@ -106,6 +106,7 @@ void OnGPRSData(u8* data, u32 len)
     if ('9' == *ptr && '$' == *(ptr + 1))
     {
         SendData(1, ptr + 3, len - 3);
+        return;
     }
 
     if ('0' == *ptr && '$' == *(ptr + 1))
@@ -130,7 +131,7 @@ void OnGPRSData(u8* data, u32 len)
     }
     else if ('5' == *ptr && '$' == *(ptr + 1))
     {
-        cmd = data;
+        cmd = data + 3;
     }
     else if ('6' == *ptr && '$' == *(ptr + 1))
     {
@@ -147,11 +148,11 @@ void OnGPRSData(u8* data, u32 len)
     console("send [%s]", cmd);
     if (SendData(0, cmd, digitLength(cmd)) < 0)
     {
-        console("command send time out, cmd: %s", cmd);
+        console("command send failed, cmd: %s", cmd);
     }
 }
 #else
-void OnGPRSData(u8* data, u32 len)
+void OnGPRSCommandData(u8* data, u32 len)
 {}
 #endif
 
@@ -170,10 +171,10 @@ void A6Init(tagEUSART tag, u16* irq, u8 len, tagEUSART target)
 {
     ASSERT((tag < MAX_USART_COM_COUNT), "invalid USART tag");
     cache = InitRingCache(buffer, MAX_CACHE_SIZE);
-    ASSERT(NULL == cache, "OOM, failed to init cache");
-    Register(tag, target, cache, OnGPRSData);
+    ASSERT(NULL != cache, "OOM, failed to init cache");
+    Register(tag, target, cache, OnGPRSCommandData);
     a6 = tag;
-    InitUSARTCTRL(tag, 0, 1, irq, len, A6_IRQ_Handler);
+    InitUSARTCTRL(tag, 1, 0, irq, len, A6_IRQ_Handler);
 }
 
 u8 WaitOK(void)
@@ -236,7 +237,6 @@ s8 Dial(u8* target, u16 port)
     len = digitLength(cmd);
     return SendData(0, cmd, len);
 }
-
 
 s8   SendDataLR()
 {

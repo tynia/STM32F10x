@@ -4,6 +4,8 @@
 #include "stm32f10x.h"
 #include "stm32f10x_rcc.h"
 
-void InitAPBCLKCTRL(u32 APB, FunctionalState state);
+void InitAPB1CLKCTRL(u32 APB, FunctionalState state);
+
+void InitAPB2CLKCTRL(u32 APB, FunctionalState state);
 
 #endif

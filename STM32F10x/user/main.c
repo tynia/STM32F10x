@@ -28,14 +28,14 @@ int main(void)
 //         return -1;
 //     }
     // init led
-    InitLED(AGPIO, GPIO_Pin_2);
+    InitLED(LED_A, GPIO_Pin_2);
 
-    console("program start...");
+    console("program start...\r\n");
     while (1)
     {
         transfer();
-        wait(5000);
-        console("abc\r\n");
+        wait(100);
+        //console("abc\r\n");
     }
     
     return 0;

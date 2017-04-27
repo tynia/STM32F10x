@@ -5,6 +5,7 @@
 #include "rcc/rcc.h"
 #include "debug/debug.h"
 #include "util/util.h"
+#include "led/led.h"
 #include "misc.h"
 #include "stm32f10x_usart.h"
 #include "stm32f10x_rcc.h"
@@ -47,8 +48,16 @@ void InitUSARTCTRL(tagEUSART tag, u8 Priority, u8 SubPriority, u16* irq, u8 len,
     ASSERT((tag < MAX_USART_COM_COUNT), "invalid USART tag");
 
     // CLOCK
-    InitAPBCLKCTRL(USARTGroup[tag].APBGPIO, ENABLE);
-    InitAPBCLKCTRL(USARTGroup[tag].APB, ENABLE);
+    InitAPB2CLKCTRL(USARTGroup[tag].APBGPIO, ENABLE);
+    if (tag == USART_COM_1 || tag == USART_COM_R1)
+    {
+        InitAPB2CLKCTRL(USARTGroup[tag].APB, ENABLE);
+    }
+    else
+    {
+        InitAPB1CLKCTRL(USARTGroup[tag].APB, ENABLE);
+    }
+    
     if (tag > USART_COM_R0)
     {
         GPIO_PinRemapConfig(USARTGroup[tag].REMAP, ENABLE);
@@ -69,6 +78,7 @@ void InitUSARTCTRL(tagEUSART tag, u8 Priority, u8 SubPriority, u16* irq, u8 len,
     USART_InitStructure.USART_Mode                = USART_Mode_Rx | USART_Mode_Tx;
     USART_Init(USARTGroup[tag].USARTx, &USART_InitStructure);
     USART_Cmd(USARTGroup[tag].USARTx, ENABLE);
+    USART_ClearFlag(USARTGroup[tag].USARTx, USART_FLAG_TC);
 
     if (NULL != func)
     {
@@ -98,13 +108,14 @@ void USARTSendData(tagEUSART tag, u8* data, u32 len)
         USART_SendData(USARTGroup[tag].USARTx, *ptr++);
         while (USART_GetFlagStatus(USARTGroup[tag].USARTx, USART_FLAG_TXE) == RESET);
     }
+    LEDTwinkle(LED_A, GPIO_Pin_2, 3, 1000);
 }
 
 u8 USARTRecvData(tagEUSART tag, u8* c)
 {
     ASSERT((tag < MAX_USART_COM_COUNT), "invalid USART tag");
     ASSERT(NULL != c, "invalid char buffer");
-    if (USART_GetITStatus(USARTGroup[tag].USARTx, USART_FLAG_RXNE) != RESET)
+    if (USART_GetITStatus(USARTGroup[tag].USARTx, USART_IT_RXNE) != RESET)
     {
         *c = USART_ReceiveData(USARTGroup[tag].USARTx);
         return 1;

@@ -3,7 +3,7 @@
 
 #define MAX_CACHE_SLOT 8
 static u8 RING_CACHE_STATE = 0;
-static tagRingCache* CachePool[MAX_CACHE_SLOT] = { 0 };
+static tagRingCache CachePool[MAX_CACHE_SLOT];
 
 void ZeroCache(tagRingCache* cache)
 {
@@ -31,7 +31,7 @@ tagRingCache* InitRingCache(u8* buffer, u32 size)
     {
         if (!(RING_CACHE_STATE & (1 << i)))
         {
-            cache = CachePool[i];
+            cache = &CachePool[i];
             cache->ptr = buffer;
             cache->capacity = size;
             cache->head = cache->ptr;

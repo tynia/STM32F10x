@@ -46,7 +46,14 @@ void doTask(u8 id)
     len = ReadPacket(cache, buffer, MAX_CACHE_SIZE);
     if (len > 0)
     {
-        entity[entity[id].to].cb(buffer, len);
+        if (USART_COM_INVALID == entity[id].to)
+        {
+            entity[id].cb(buffer, len);
+        }
+        else
+        {
+            entity[entity[id].to].cb(buffer, len);
+        }
     }
     else
     {
