@@ -48,16 +48,21 @@ void doTask(u8 id)
     {
         if (USART_COM_INVALID == entity[id].to)
         {
-            entity[id].cb(buffer, len);
+            console("%s\r\n", buffer);
+            //entity[id].cb(buffer, len);
         }
         else
         {
             entity[entity[id].to].cb(buffer, len);
         }
     }
+    else if (0 > len)
+    {
+        // do nothing
+    }
     else
     {
-        console("failed to read one packet from cache: source: %d", id);
+        console("failed to read one packet from cache, source: %d", id);
     }
 
     zero(buffer, MAX_CACHE_SIZE);

@@ -23,7 +23,7 @@ static tagGPIO GPIOGroup[] = {
 void InitGPIOCTRL(tagEGPIO xGPIO, u16 xPin, u8 Mode, u8 Speed)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    ASSERT(xGPIO < xGPIO_END, "invalid GPIO index");
+    ASSERT(xGPIO < xGPIO_END, "invalid GPIO tag");
     InitAPB2CLKCTRL(GPIOGroup[xGPIO].APBGPIOx, ENABLE);
     GPIO_InitStructure.GPIO_Pin = xPin;
     GPIO_InitStructure.GPIO_Mode = (GPIOMode_TypeDef)Mode;
@@ -33,12 +33,12 @@ void InitGPIOCTRL(tagEGPIO xGPIO, u16 xPin, u8 Mode, u8 Speed)
 
 void LLevel(tagEGPIO xGPIO, u16 xPin)
 {
-    ASSERT(xGPIO < xGPIO_END, "invalid GPIO index");
+    ASSERT(xGPIO < xGPIO_END, "invalid GPIO tag");
     GPIO_ResetBits(GPIOGroup[xGPIO].GPIOx, xPin);
 }
 
 void HLevel(tagEGPIO xGPIO, u16 xPin)
 {
-    ASSERT(xGPIO < xGPIO_END, "invalid GPIO index");
+    ASSERT(xGPIO < xGPIO_END, "invalid GPIO tag");
     GPIO_SetBits(GPIOGroup[xGPIO].GPIOx, xPin);
 }
