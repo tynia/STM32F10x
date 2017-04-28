@@ -92,14 +92,14 @@ void OnGPRSCommandData(u8* data, u32 len)
     ASSERT(NULL != data, "invalid data received from debugger");
     if ('$' != *ptr)
     {
-        console("command should start with $, e.g. $[0-9]$\r\n");
+        console("command should start with $, e.g. $[0-9]$");
         return;
     }
 
     ++ptr;
     if ('0' > *ptr || '9' < *ptr)
     {
-        console("command should start with $, and assigned the number stands for cmd, regex: $[0-9]$\r\n");
+        console("command should start with $, and assigned the number stands for cmd, regex: $[0-9]$");
         return;
     }
 
@@ -147,12 +147,12 @@ void OnGPRSCommandData(u8* data, u32 len)
     }
     else
     {
-        console("unknown command: %s\r\n", data)
+        console("unknown command: %s", data);
     }
     console("send [%s]", cmd);
     if (SendData(0, cmd, digitLength(cmd)) < 0)
     {
-        console("command send failed, cmd: %s\r\n", cmd);
+        console("command send failed, cmd: %s", cmd);
     }
 }
 #else
