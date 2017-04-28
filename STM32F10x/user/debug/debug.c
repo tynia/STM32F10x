@@ -30,6 +30,12 @@ void console(const char* fmt, ...)
         vsnprintf(buffer, CONSOLE_BUFFER_SIZE, fmt, args);
         va_end(args);
         len = digitLength((u8*)buffer);
+
+        // append 0x0D 0x0A
+        buffer[len] = '\r';
+        buffer[len + 1] = '\n';
+        buffer[len + 2] = '\0';
+        len += 3;
         if (NULL != cb)
         {
             cb((u8*)buffer, len);
