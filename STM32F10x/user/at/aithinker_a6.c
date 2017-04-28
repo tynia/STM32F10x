@@ -105,7 +105,7 @@ void OnGPRSCommandData(u8* data, u32 len)
 
     if ('9' == *ptr && '$' == *(ptr + 1))
     {
-        SendData(1, ptr + 3, len - 3);
+        SendData(1, ptr + 2, len - 3);
         return;
     }
 
@@ -262,8 +262,7 @@ s8 SendDataBegin()
 s8 SendDataEnd()
 {
     u8 cmd[] = { 0x1A };
-    SendData(0, cmd, 1);
-    return SendDataLR();
+    return SendData(0, cmd, 1);
 }
 
 s8   SendData(u8 RAW, u8* data, u32 len)
@@ -276,6 +275,7 @@ s8   SendData(u8 RAW, u8* data, u32 len)
     if (RAW)
     {
         SendDataBegin();
+        wait(5000);
         USARTSendData(a6, data, len);
         SendDataEnd();
     }
