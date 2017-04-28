@@ -149,7 +149,7 @@ void OnGPRSCommandData(u8* data, u32 len)
     {
         console("unknown command: %s", data);
     }
-    console("send [%s]", cmd);
+    //console("send [%s]", cmd);
     if (SendData(0, cmd, digitLength(cmd)) < 0)
     {
         console("command send failed, cmd: %s", cmd);
