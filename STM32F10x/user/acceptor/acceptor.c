@@ -15,6 +15,9 @@ void OnAcceptorData(u8* data, u32 len)
 {
     if (USART_COM_INVALID != acceptor)
     {
+        // parse data frame
+        // handler
+        // make reply data frame
         USARTSendData(acceptor, data, len);
     }
 }

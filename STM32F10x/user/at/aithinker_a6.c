@@ -86,7 +86,7 @@ void A6_IRQ_Handler(void)
 
 #ifdef _DEBUG
 s8 SendDataEnd();
-void OnGPRSCommandData(u8* data, u32 len)
+void OnCTRLDataIn(u8* data, u32 len)
 {
     u8* ptr = data;
     u8* cmd = NULL;
@@ -162,7 +162,7 @@ void OnGPRSCommandData(u8* data, u32 len)
     }
 }
 #else
-void OnGPRSCommandData(u8* data, u32 len)
+void OnCTRLDataIn(u8* data, u32 len)
 {}
 #endif
 
@@ -182,7 +182,7 @@ void A6Init(tagEUSART tag, u16* irq, u8 len, tagEUSART target)
     ASSERT((tag < MAX_USART_COM_COUNT), "invalid USART tag");
     cache = InitRingCache(buffer, MAX_CACHE_SIZE);
     ASSERT(NULL != cache, "OOM, failed to init cache");
-    Register(tag, target, cache, OnGPRSCommandData);
+    Register(tag, target, cache, OnCTRLDataIn);
     a6 = tag;
     InitUSARTCTRL(tag, 1, 0, irq, len, A6_IRQ_Handler);
 }

@@ -5,6 +5,7 @@
 #include "led/led.h"
 #include "transfer/transfer.h"
 #include "stm32f10x_usart.h"
+#include "cJSON.h"
 
 static tagEUSART debugger = USART_COM_INVALID;
 static u8 buffer[MAX_CACHE_SIZE];

@@ -11,6 +11,8 @@ void Register(tagEUSART tag, tagEUSART target, tagRingCache* cache, ON_DATA_RECE
 
 u8 transmit(tagEUSART id);
 
+u8 empty(void);
+
 void transfer(void);
 
 #endif

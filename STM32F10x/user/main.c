@@ -18,11 +18,18 @@ __task void TaskDebugger()
     // init debugger
     InitDebugger(USART_COM_4, USART_COM_3);
 #else
-    InitAcceptor(USART_COM_4, irq, 1, USART_COM_3);
+    InitAcceptor(USART_COM_4, irq, 1, USART_COM_4);
 #endif
     while (1)
     {
-        os_dly_wait(20);
+        if (0 != empty())
+        {
+            transfer();
+        }
+        else
+        {
+            os_dly_wait(20);
+        }
     }
 }
 
@@ -35,20 +42,13 @@ __task void TaskA6()
     }
 }
 
-__task void TaskIdle(void)
-{
-    while (1)
-    {
-        transfer();
-        os_dly_wait(20);
-    }
-}
-
 __task void TaskOn(void)
 {
     OS_TID debugID = os_tsk_create(TaskDebugger, 3);
     OS_TID a6ID    = os_tsk_create(TaskA6, 3);
-    OS_TID idle = os_tsk_create(TaskIdle, 4);
+    
+    console("program start...");
+    
     os_tsk_delete_self();
 }
 
@@ -74,7 +74,6 @@ int main(void)
     InitLED(LED_A, GPIO_Pin_2);
 
     os_sys_init(TaskOn);
-    console("program start...");
 //     while (1)
 //     {
 //         transfer();

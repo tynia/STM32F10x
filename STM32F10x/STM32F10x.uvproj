@@ -346,7 +346,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER,USE_STM3210E_EVAL,_DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>.\core;.\fwlib;.\system;.\user;.\utilities;.\rtx\inc;.\rtx\portable</IncludePath>
+              <IncludePath>.\core;.\fwlib;.\system;.\user;.\utilities;.\rtx\inc;.\rtx\portable;.\json</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -625,6 +625,16 @@
               <FileName>RTX_Conf_CM.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\rtx\RTX_Conf_CM.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>json</GroupName>
+          <Files>
+            <File>
+              <FileName>cJSON.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\json\cJSON.c</FilePath>
             </File>
           </Files>
         </Group>

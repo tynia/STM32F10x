@@ -99,16 +99,22 @@ u8 transmit(tagEUSART id)
     return 1;
 }
 
-void transfer()
+u8 empty(void)
 {
-    while (ptail != phead)
+    if (ptail != phead)
     {
-        doTask(*ptail);
-        ++ptail;
+        return 0;
+    }
+    return 1;
+}
 
-        if (ptail > mqueue + MSG_QUEUE_SIZE)
-        {
-            ptail = mqueue;
-        }
+void transfer(void)
+{
+    doTask(*ptail);
+    ++ptail;
+
+    if (ptail > mqueue + MSG_QUEUE_SIZE)
+    {
+        ptail = mqueue;
     }
 }
