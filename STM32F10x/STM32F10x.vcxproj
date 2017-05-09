@@ -168,7 +168,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)output</OutDir>
     <IntDir>$(ProjectDir)output</IntDir>
-    <IncludePath>$(ProjectDir)core;$(ProjectDir)fwlib;$(ProjectDir)system;$(ProjectDir)user;$(ProjectDir)utilities;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)core;$(ProjectDir)fwlib;$(ProjectDir)system;$(ProjectDir)user;$(ProjectDir)utilities;$(ProjectDir)rtx\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

@@ -85,6 +85,7 @@ void A6_IRQ_Handler(void)
 // send data to target
 
 #ifdef _DEBUG
+s8 SendDataEnd();
 void OnGPRSCommandData(u8* data, u32 len)
 {
     u8* ptr = data;
@@ -93,6 +94,11 @@ void OnGPRSCommandData(u8* data, u32 len)
     if ('$' != *ptr)
     {
         console("command should start with $, e.g. $[0-9]$");
+        return;
+    }
+    else if (0x1A == *ptr)
+    {
+        SendDataEnd();
         return;
     }
 
