@@ -43,10 +43,10 @@
     <ClCompile Include="fwlib\src\stm32f10x_usart.c" />
     <ClCompile Include="fwlib\src\stm32f10x_wwdg.c" />
     <ClCompile Include="json\cJSON.c" />
-    <ClCompile Include="json\rtxJSON.c" />
     <ClCompile Include="system\stm32f10x_it.c" />
     <ClCompile Include="system\system_stm32f10x.c" />
     <ClCompile Include="user\acceptor\acceptor.c" />
+    <ClCompile Include="user\allocator\allocator.c" />
     <ClCompile Include="user\at\aithinker_a6.c" />
     <ClCompile Include="user\buffer\buffer.c" />
     <ClCompile Include="user\debug\debug.c" />
@@ -88,12 +88,13 @@
     <ClInclude Include="fwlib\stm32f10x_usart.h" />
     <ClInclude Include="fwlib\stm32f10x_wwdg.h" />
     <ClInclude Include="json\cJSON.h" />
-    <ClInclude Include="json\rtxJSON.h" />
+    <ClInclude Include="rtx\RTL.h" />
     <ClInclude Include="system\stm32f10x.h" />
     <ClInclude Include="system\stm32f10x_conf.h" />
     <ClInclude Include="system\stm32f10x_it.h" />
     <ClInclude Include="system\system_stm32f10x.h" />
     <ClInclude Include="user\acceptor\acceptor.h" />
+    <ClInclude Include="user\allocator\allocator.h" />
     <ClInclude Include="user\at\aithinker_a6.h" />
     <ClInclude Include="user\buffer\buffer.h" />
     <ClInclude Include="user\debug\debug.h" />
@@ -172,7 +173,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)output</OutDir>
     <IntDir>$(ProjectDir)output</IntDir>
-    <IncludePath>$(ProjectDir)core;$(ProjectDir)fwlib;$(ProjectDir)system;$(ProjectDir)user;$(ProjectDir)utilities;$(ProjectDir)rtx\inc;$(ProjectDir)json;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)core;$(ProjectDir)fwlib;$(ProjectDir)system;$(ProjectDir)user;$(ProjectDir)utilities;$(ProjectDir)rtx;$(ProjectDir)json;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
