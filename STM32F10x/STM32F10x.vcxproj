@@ -43,6 +43,7 @@
     <ClCompile Include="fwlib\src\stm32f10x_usart.c" />
     <ClCompile Include="fwlib\src\stm32f10x_wwdg.c" />
     <ClCompile Include="json\cJSON.c" />
+    <ClCompile Include="rtx\RTX_Conf_CM.c" />
     <ClCompile Include="system\stm32f10x_it.c" />
     <ClCompile Include="system\system_stm32f10x.c" />
     <ClCompile Include="user\acceptor\acceptor.c" />

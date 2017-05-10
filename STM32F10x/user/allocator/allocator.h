@@ -4,7 +4,7 @@
 #include "stm32f10x.h"
 #include "RTL.h"
 
-void* delegateMalloc(size_t size);
-void  delegateFree(void* ptr);
+void* rtxMalloc(size_t size);
+void  rtxFree(void* ptr);
 
 #endif

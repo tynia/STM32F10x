@@ -1,6 +1,5 @@
 #include "allocator.h"
 #include "cJSON.h"
-#include "RTL.h"
 
 _declare_box(mb8, 8, 5);
 _declare_box(mb16, 16, 20);
@@ -10,7 +9,7 @@ _declare_box(mb128, 128, 10);
 _declare_box(mb256, 256, 10);
 
 typedef struct _tag_mem_node {
-    u8* mbx;
+    u32* mbx;
     void* pdata;
 } mem_node;
 
@@ -25,12 +24,12 @@ void InitMemoryMgr()
     _init_box(mb128, sizeof(mb128), 128);
     _init_box(mb256, sizeof(mb256), 256);
 
-    hooks.malloc_fn = delegateMalloc;
-    hooks.free_fn = delegateFree;
+    hooks.malloc_fn = rtxMalloc;
+    hooks.free_fn = rtxFree;
     cJSON_InitHooks(&hooks);
 }
 
-void* delegateMalloc(size_t size)
+void* rtxMalloc(size_t size)
 {
     size_t delegateSize = size + sizeof(void*);
     void* ptr = NULL;
@@ -112,7 +111,7 @@ void* delegateMalloc(size_t size)
     return NULL;
 }
 
-void delegateFree(void* ptr)
+void rtxFree(void* ptr)
 {
     u8* addr = (u8*)((u8*)ptr - 4);
     mem_node* node = (mem_node*)addr;
