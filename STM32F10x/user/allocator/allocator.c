@@ -1,10 +1,10 @@
 #include "allocator.h"
 #include "cJSON.h"
 
-_declare_box(mb8, 8, 5);
-_declare_box(mb16, 16, 20);
-_declare_box(mb32, 32, 10);
-_declare_box(mb64, 64, 10);
+_declare_box(mb8,   8,   5);
+_declare_box(mb16,  16,  20);
+_declare_box(mb32,  32,  10);
+_declare_box(mb64,  64,  10);
 _declare_box(mb128, 128, 10);
 _declare_box(mb256, 256, 10);
 
@@ -17,10 +17,10 @@ void InitMemoryMgr()
 {
     cJSON_Hooks hooks;
 
-    _init_box(mb8, sizeof(mb8), 8);
-    _init_box(mb16, sizeof(mb16), 16);
-    _init_box(mb32, sizeof(mb32), 32);
-    _init_box(mb64, sizeof(mb64), 64);
+    _init_box(mb8,   sizeof(mb8),   8);
+    _init_box(mb16,  sizeof(mb16),  16);
+    _init_box(mb32,  sizeof(mb32),  32);
+    _init_box(mb64,  sizeof(mb64),  64);
     _init_box(mb128, sizeof(mb128), 128);
     _init_box(mb256, sizeof(mb256), 256);
 
@@ -33,6 +33,7 @@ void* rtxMalloc(size_t size)
 {
     size_t delegateSize = size + sizeof(void*);
     void* ptr = NULL;
+    u32*  mbx = NULL;
     mem_node* node = NULL;
 
     if (delegateSize > 256)
@@ -48,8 +49,7 @@ void* rtxMalloc(size_t size)
             ptr = _alloc_box(mb8);
             if (NULL != ptr)
             {
-                node = (mem_node*)ptr;
-                node->mbx = mb8;
+                mbx = mb8;
             }
         }
         else if (delegateSize > 8 && delegateSize <= 16)
@@ -57,8 +57,7 @@ void* rtxMalloc(size_t size)
             ptr = _alloc_box(mb16);
             if (NULL != ptr)
             {
-                node = (mem_node*)ptr;
-                node->mbx = mb16;
+                mbx = mb16;
             }
         }
         else if (delegateSize > 16 && delegateSize <= 32)
@@ -66,8 +65,7 @@ void* rtxMalloc(size_t size)
             ptr = _alloc_box(mb32);
             if (NULL != ptr)
             {
-                node = (mem_node*)ptr;
-                node->mbx = mb32;
+                mbx = mb32;
             }
         }
         else if (delegateSize > 32 && delegateSize <= 64)
@@ -75,8 +73,7 @@ void* rtxMalloc(size_t size)
             ptr = _alloc_box(mb64);
             if (NULL != ptr)
             {
-                node = (mem_node*)ptr;
-                node->mbx = mb64;
+                mbx = mb64;
             }
         }
         else if (delegateSize > 64 && delegateSize <= 128)
@@ -84,8 +81,7 @@ void* rtxMalloc(size_t size)
             ptr = _alloc_box(mb128);
             if (NULL != ptr)
             {
-                node = (mem_node*)ptr;
-                node->mbx = mb128;
+                mbx = mb128;
             }
         }
         else if (delegateSize > 128 && delegateSize <= 256)
@@ -93,13 +89,15 @@ void* rtxMalloc(size_t size)
             ptr = _alloc_box(mb256);
             if (NULL != ptr)
             {
-                node = (mem_node*)ptr;
-                node->mbx = mb256;
+                mbx = mb256;
             }
         }
 
         if (NULL != node)
         {
+            node = (mem_node*)ptr;
+            node->mbx = mbx;
+            node->pdata = (u8*)ptr + sizeof(u32*);
             return node->pdata;
         }
         else
@@ -113,7 +111,7 @@ void* rtxMalloc(size_t size)
 
 void rtxFree(void* ptr)
 {
-    u8* addr = (u8*)((u8*)ptr - 4);
+    u8* addr = (u8*)((u8*)ptr - sizeof(u32*));
     mem_node* node = (mem_node*)addr;
     if (NULL != node->mbx)
     {

@@ -4,6 +4,7 @@
 #include "debug/debug.h"
 #include "buffer/buffer.h"
 #include <stdio.h>
+#include "cJSON.h"
 
 #define MSG_QUEUE_SIZE 50
 
@@ -54,6 +55,18 @@ void doTask(u8 id)
         else
         {
             entity[entity[id].to].cb(buffer, len);
+//             {
+//                 u8* text = "{\"abc\": \"debug in\"}";
+//                 cJSON* json = cJSON_Parse(text);
+//                 u8* pdata = NULL;
+//                 u8  jlen = 0;
+//                 buffer[len] = '\0';
+//                 cJSON_AddStringToObject(json, "recv", buffer);
+//                 pdata = cJSON_Print(json);
+//                 jlen = digitLength(pdata);
+//                 console("%s", pdata);
+//                 cJSON_Delete(json);
+//             }
         }
     }
     else if (0 > len)

@@ -8,6 +8,7 @@
 #include "at/aithinker_a6.h"
 #include "led/led.h"
 #include "transfer/transfer.h"
+#include "allocator/allocator.h"
 #include "RTL.h"
 
 u16 irq[] = { USART_IT_RXNE,};
@@ -20,9 +21,10 @@ __task void TaskDebugger()
 #else
     InitAcceptor(USART_COM_4, irq, 1, USART_COM_4);
 #endif
+    InitMemoryMgr();
     while (1)
     {
-        if (0 != empty())
+        if (0 == empty())
         {
             transfer();
         }
