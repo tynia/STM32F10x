@@ -591,6 +591,11 @@
               <FileType>1</FileType>
               <FilePath>.\user\allocator\allocator.c</FilePath>
             </File>
+            <File>
+              <FileName>frame.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\buffer\frame.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

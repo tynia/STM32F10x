@@ -6,19 +6,73 @@
 #include "transfer/transfer.h"
 #include "stm32f10x_usart.h"
 #include "cJSON.h"
+#include "buffer/frame.h"
+#include "stm32f10x_gpio.h"
+#include "util/util.h"
 
 static tagEUSART debugger = USART_COM_INVALID;
 static u8 buffer[MAX_CACHE_SIZE];
 static tagRingCache* cache = NULL;
-static u8 recv_state = 0;
-
+static u16 toRead = 0;
+#define CHECK(x, y)   (x |= (1 << y))
+#define ISCHECK(x, y) (x & (1 << y))
+static u8 syncState = 0;
+// byte   1 1 1 1 1 1 1 1
+// bit    7 6 5 4 3 2 1 0
+//        |     |     |
+//    recv len  |     |
+//          recv 0xEF |
+//                recv 0xEA
+#define RECV_SYNC_1 1
+#define RECV_SYNC_2 4
+#define RECV_LENGTH 7
 // print out through debug com
 void OnDebugData(u8* data, u32 len)
 {
+    //debug
+//     if (0xEA == *data)
+//     {
+//         frame frame_in;
+//         frame frame_out;
+//         u8 buf[256] = { 0 };
+//         parse(data, &frame_in);
+//         if (10030 == frame_in.header.type)
+//         {
+//             LEDOn(LED_A, GPIO_Pin_2);
+//         }
+// 
+//         frame_out.header.sync = frame_in.header.sync;
+//         frame_out.header.msgLen = 27;
+//         frame_out.header.padding = 0;
+//         frame_out.header.device = frame_in.header.device;
+//         frame_out.header.msgid = frame_in.header.msgid;
+//         frame_out.header.type = frame_in.header.type;
+//         frame_out.pdata = "{\"status\": 1}";
+//         serialize(&frame_out, buf);
+//         USARTSendData(debugger, buf, 27);
+//         return;
+//     }
+
     if (USART_COM_INVALID != debugger)
     {
         USARTSendData(debugger, data, len);
     }
+}
+
+void SendDebugFrameData()
+{
+    u32 msgid  = 10010;
+    u32 device = 10020;
+    u16 type = 10030;
+    u8* json = "{\"hello\":\"world\"}";
+    WriteChar(cache, 0xEA);
+    WriteChar(cache, 0xEF);
+    WriteChar(cache, 31);
+    WriteChar(cache, 0);
+    Write(cache, (u8*)&device, sizeof(u32));
+    Write(cache, (u8*)&msgid, sizeof(u32));
+    Write(cache, (u8*)&type, sizeof(u16));
+    Write(cache, json, digitLength(json));
 }
 
 void DebuggerIRQHandler(void)
@@ -26,16 +80,48 @@ void DebuggerIRQHandler(void)
     u8 r = 0;
     if (0 != USARTRecvData(debugger, &r))
     {
-        //console("%c", r);
-        WriteChar(cache, r);
-        if (r == 0x0D)
+        // debug
+//         if ('c' == r)
+//         {
+//             SendDebugFrameData();
+//             transmit(debugger);
+//             return;
+//         }
+
+        if (0 != ISCHECK(syncState, RECV_SYNC_2))
         {
-            recv_state = 1;
+            if (0 == ISCHECK(syncState, RECV_LENGTH))
+            {
+                CHECK(syncState, RECV_LENGTH);
+                toRead = r - 2;
+            }
+            WriteChar(cache, r);
+            --toRead;
+            if (toRead == 0)
+            {
+                syncState = 0;
+                transmit(debugger);
+            }
         }
-        else if (r == 0x0A)
+        else if (0 != ISCHECK(syncState, RECV_SYNC_1))
         {
-            recv_state = 0;
-            transmit(debugger);
+            if (r == 0xEF)
+            {
+                CHECK(syncState, 4);
+                WriteChar(cache, 0xEA);
+                WriteChar(cache, 0xEF);
+            }
+            else
+            {
+                syncState = 0;
+            }
+        }
+        else
+        {
+            if (r == 0xEA)
+            {
+                CHECK(syncState, RECV_SYNC_1);
+            }
         }
     }
 }

@@ -8,8 +8,20 @@
 
 static tagEUSART acceptor = USART_COM_INVALID;
 static u8 buffer[MAX_CACHE_SIZE] = { 0 };
-static u8 recv_state = 0;
 static tagRingCache* cache = NULL;
+static u16 toRead = 0;
+#define CHECK(x, y)   (x | (1 << y))
+#define ISCHECK(x, y) (x & (1 << y))
+static u8 syncState = 0;
+// byte   1 1 1 1 1 1 1 1
+// bit    7 6 5 4 3 2 1 0
+//        |     |     |
+//    recv len  |     |
+//          recv 0xEF |
+//                recv 0xEA
+#define RECV_SYNC_1 1
+#define RECV_SYNC_2 4
+#define RECV_LENGTH 7
 
 void OnAcceptorData(u8* data, u32 len)
 {
@@ -27,15 +39,40 @@ void AcceptorIRQHandler(void)
     u8 r = 0;
     if (0 != USARTRecvData(acceptor, &r))
     {
-        WriteChar(cache, r);
-        if (r == 0x0D)
+        if (0 != ISCHECK(syncState, RECV_SYNC_2))
         {
-            recv_state = 1;
+            if (0 == ISCHECK(syncState, RECV_LENGTH))
+            {
+                CHECK(syncState, RECV_LENGTH);
+                toRead = r - 2;
+            }
+            WriteChar(cache, r);
+            --toRead;
+            if (toRead == 0)
+            {
+                syncState = 0;
+                transmit(acceptor);
+            }
         }
-        else if (r == 0x0A)
+        else if (0 != ISCHECK(syncState, RECV_SYNC_1))
         {
-            recv_state = 0;
-            transmit(acceptor);
+            if (r == 0xEF)
+            {
+                CHECK(syncState, 4);
+                WriteChar(cache, 0xEA);
+                WriteChar(cache, 0xEF);
+            }
+            else
+            {
+                syncState = 0;
+            }
+        }
+        else
+        {
+            if (r == 0xEA)
+            {
+                CHECK(syncState, RECV_SYNC_1);
+            }
         }
     }
 }

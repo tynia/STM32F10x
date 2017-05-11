@@ -197,6 +197,7 @@ s32 ReadPacket(tagRingCache* cache, u8* buffer, u32 size)
 {
     u8 state;
     u32 rlen;
+    u32 toRead;
     if (NULL == cache)
     {
         return -1;
@@ -215,27 +216,37 @@ s32 ReadPacket(tagRingCache* cache, u8* buffer, u32 size)
     while (cache->tail != cache->head)
     {
         u8 c = *(cache->tail);
+        ++rlen;
+        if (1 == rlen)
+        {
+            if (0xEA != c)
+            {
+                return -1;
+            }
+        }
+
+        if (2 == rlen)
+        {
+            if (0xEF != c)
+            {
+                return -1;
+            }
+        }
+
         *buffer = c;
         ++cache->tail;
         ++buffer;
-        ++rlen;
 
         if (cache->tail > cache->ptr + cache->capacity)
         {
             cache->tail = cache->ptr;
         }
 
-        if (c == 0x0D)
+        if (rlen == 3)
         {
-            state |= 0x40;
-        }
-        if (c == 0x0A)
-        {
-            if (state & 0x40)
-            {
-                state = 0;
-                return rlen;
-            }
+            toRead = c - 3;
+            rlen += Read(cache, buffer, size - rlen, toRead);
+            return c;
         }
     }
 
