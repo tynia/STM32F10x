@@ -70,7 +70,7 @@ void InitUSARTCTRL(tagEUSART tag, u8 Priority, u8 SubPriority, u16* irq, u8 len,
     InitGPIOCTRL(USARTGroup[tag].GPIORx, USARTGroup[tag].RXD, (u8)GPIO_Mode_IN_FLOATING, (u8)GPIO_Speed_50MHz);
 
     // USART
-    USART_InitStructure.USART_BaudRate            = 115200;
+    USART_InitStructure.USART_BaudRate            = 9600;
     USART_InitStructure.USART_WordLength          = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits            = USART_StopBits_1;
     USART_InitStructure.USART_Parity              = USART_Parity_No;
@@ -108,7 +108,7 @@ void USARTSendData(tagEUSART tag, u8* data, u32 len)
         USART_SendData(USARTGroup[tag].USARTx, *ptr++);
         while (USART_GetFlagStatus(USARTGroup[tag].USARTx, USART_FLAG_TXE) == RESET);
     }
-    LEDTwinkle(LED_A, GPIO_Pin_2, 3, 1000);
+    //LEDTwinkle(LED_A, GPIO_Pin_2, 3, 1000);
 }
 
 u8 USARTRecvData(tagEUSART tag, u8* c)

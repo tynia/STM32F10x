@@ -49,7 +49,7 @@ __task void TaskOn(void)
     OS_TID debugID = os_tsk_create(TaskDebugger, 3);
     OS_TID a6ID    = os_tsk_create(TaskA6, 3);
     
-    console("program start...");
+    //console("program start...");
     
     os_tsk_delete_self();
 }

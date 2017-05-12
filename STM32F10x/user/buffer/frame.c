@@ -97,6 +97,6 @@ void serialize(frame* in, u8* out)
     append(&out, &(header->padding), 1);
     append(&out, (u8*)&(header->device), sizeof(u32));
     append(&out, (u8*)&(header->msgid), sizeof(u32));
-    append(&out, (u8*)&(header->msgLen), sizeof(u16));
+    append(&out, (u8*)&(header->type), sizeof(u16));
     append(&out, in->pdata, header->msgLen - FRAME_HEADER_LEN);
 }

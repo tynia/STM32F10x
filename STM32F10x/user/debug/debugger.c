@@ -26,6 +26,7 @@ static u8 syncState = 0;
 #define RECV_SYNC_1 1
 #define RECV_SYNC_2 4
 #define RECV_LENGTH 7
+static u8 count = 0;
 // print out through debug com
 void OnDebugData(u8* data, u32 len)
 {
@@ -36,20 +37,27 @@ void OnDebugData(u8* data, u32 len)
 //         frame frame_out;
 //         u8 buf[256] = { 0 };
 //         parse(data, &frame_in);
-//         if (10030 == frame_in.header.type)
+//         if (0 == count % 2)
 //         {
 //             LEDOn(LED_A, GPIO_Pin_2);
 //         }
-// 
+//         else
+//         {
+//             LEDOff(LED_A, GPIO_Pin_2);
+//         }
+//             count += 1;
+//          
+//         frame_out.pdata = "{\"result\":0,\"on_off\":1}";
 //         frame_out.header.sync = frame_in.header.sync;
-//         frame_out.header.msgLen = 27;
+//         frame_out.header.msgLen = 14 + digitLength(frame_out.pdata);
 //         frame_out.header.padding = 0;
 //         frame_out.header.device = frame_in.header.device;
 //         frame_out.header.msgid = frame_in.header.msgid;
 //         frame_out.header.type = frame_in.header.type;
-//         frame_out.pdata = "{\"status\": 1}";
+//         
+//         
 //         serialize(&frame_out, buf);
-//         USARTSendData(debugger, buf, 27);
+//         USARTSendData(debugger, buf, 14 + digitLength(frame_out.pdata));
 //         return;
 //     }
 
