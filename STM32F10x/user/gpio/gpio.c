@@ -42,3 +42,9 @@ void HLevel(tagEGPIO xGPIO, u16 xPin)
     ASSERT(xGPIO < xGPIO_END, "invalid GPIO tag");
     GPIO_SetBits(GPIOGroup[xGPIO].GPIOx, xPin);
 }
+
+u8 OutputState(tagEGPIO xGPIO, u16 xPin)
+{
+    ASSERT(xGPIO < xGPIO_END, "invalid GPIO tag");
+    return GPIO_ReadOutputDataBit(GPIOGroup[xGPIO].GPIOx, xPin);
+}

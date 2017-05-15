@@ -28,6 +28,12 @@ void LEDOff(tagELED tag, u16 xPin)
     HLevel(tag, xPin);
 }
 
+u8 IsLEDOn(tagELED tag, u16 xPin)
+{
+    ASSERT((tag < LED_END), "invalid LED tag");
+    return OutputState(tag, xPin);
+}
+
 void twinkle(tagELED tag, u16 xPin, u32 timespan)
 {
     ASSERT((tag < LED_END), "invalid LED tag");

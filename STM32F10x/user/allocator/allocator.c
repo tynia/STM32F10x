@@ -8,6 +8,13 @@ _declare_box(mb64,  64,  10);
 _declare_box(mb128, 128, 10);
 _declare_box(mb256, 256, 10);
 
+// static u32 mb8[13];
+// static u32 mb16[83];
+// static u32 mb32[83];
+// static u32 mb64[163];
+// static u32 mb128[323];
+// static u32 mb256[643];
+
 typedef struct _tag_mem_node {
     u32* mbx;
     void* pdata;
@@ -93,7 +100,7 @@ void* rtxMalloc(size_t size)
             }
         }
 
-        if (NULL != node)
+        if (NULL != ptr)
         {
             node = (mem_node*)ptr;
             node->mbx = mbx;

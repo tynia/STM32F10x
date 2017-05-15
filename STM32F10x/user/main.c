@@ -60,6 +60,6 @@ int main(void)
     InitLED(LED_A, GPIO_Pin_2);
 
     os_sys_init(TaskOn);
-    
+
     return 0;
 }

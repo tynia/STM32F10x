@@ -21,6 +21,8 @@ void LEDOn(tagELED tag, u16 xPin);
 
 void LEDOff(tagELED tag, u16 xPin);
 
+u8 IsLEDOn(tagELED tag, u16 xPin);
+
 void LEDTwinkle(tagELED tag, u16 xPin, u32 times, u32 timespan);
 
 #endif

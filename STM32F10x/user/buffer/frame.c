@@ -70,12 +70,13 @@ s8 parse(u8* data, frame* out)
     out->header.device = header->device;
     out->header.msgid = header->msgid;
     out->header.type = header->type;
+    out->pdata = data + FRAME_HEADER_LEN;
 
-    json = cJSON_Parse((const char*)(data + FRAME_HEADER_LEN));
-    if (NULL != json)
-    {
-        out->pdata = (u8*)cJSON_PrintUnformatted(json);
-    }
+//     json = cJSON_Parse((const char*)(data + FRAME_HEADER_LEN));
+//     if (NULL != json)
+//     {
+//         out->pdata = (u8*)cJSON_PrintUnformatted(json);
+//     }
 
     return 0;
 }

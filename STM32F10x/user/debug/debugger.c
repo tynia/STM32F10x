@@ -26,7 +26,7 @@ static u8 syncState = 0;
 #define RECV_SYNC_1 1
 #define RECV_SYNC_2 4
 #define RECV_LENGTH 7
-static u8 count = 0;
+
 // print out through debug com
 void OnDebugData(u8* data, u32 len)
 {
@@ -36,25 +36,56 @@ void OnDebugData(u8* data, u32 len)
 //         frame frame_in;
 //         frame frame_out;
 //         u8 buf[256] = { 0 };
+//         cJSON* json = NULL;
+//         cJSON* item = NULL;
 //         parse(data, &frame_in);
-//         if (0 == count % 2)
+//         json = cJSON_Parse((const char*)(frame_in.pdata));
+//         if (NULL != json)
 //         {
-//             LEDOn(LED_A, GPIO_Pin_2);
-//             frame_out.pdata = "{\"result\":0,\"on_off\":1}";
+//             item = cJSON_GetObjectItem(json, "method");
+//             if (NULL != item)
+//             {
+//                 if (item->valueint == 0)
+//                 {
+//                     if (IsLEDOn(LED_A, GPIO_Pin_2) != 0)
+//                     {
+//                         frame_out.pdata = "{\"result\":0,\"on_off\":0}";
+//                     }
+//                     else
+//                     {
+//                         frame_out.pdata = "{\"result\":0,\"on_off\":1}";
+//                     }
+//                 }
+//                 else if (item->valueint == 1)
+//                 {
+//                     cJSON* on = cJSON_GetObjectItem(json, "on_off");
+//                     if (NULL != on)
+//                     {
+//                         if (on->valueint == 1)
+//                         {
+//                             LEDOn(LED_A, GPIO_Pin_2);
+//                             frame_out.pdata = "{\"result\":0,\"on_off\":1}";
+//                         }
+//                         else
+//                         {
+//                             LEDOff(LED_A, GPIO_Pin_2);
+//                             frame_out.pdata = "{\"result\":0,\"on_off\":0}";
+//                         }
+//                     }
+//                 }
+//             }
+//             cJSON_Delete(json);
 //         }
 //         else
 //         {
-//             LEDOff(LED_A, GPIO_Pin_2);
-//             frame_out.pdata = "{\"result\":0,\"on_off\":0}";
+//             frame_out.pdata = "{\"result\":1, \"msg\":\"invalid msg\"}";
 //         }
-//         count += 1;
 //         frame_out.header.sync = frame_in.header.sync;
 //         frame_out.header.msgLen = 14 + digitLength(frame_out.pdata);
 //         frame_out.header.padding = 0;
 //         frame_out.header.device = frame_in.header.device;
 //         frame_out.header.msgid = frame_in.header.msgid;
 //         frame_out.header.type = frame_in.header.type;
-// 
 // 
 //         serialize(&frame_out, buf);
 //         USARTSendData(debugger, buf, 14 + digitLength(frame_out.pdata));
@@ -67,15 +98,27 @@ void OnDebugData(u8* data, u32 len)
     }
 }
 
-void SendDebugFrameData()
+void SendDebugFrameData(u8 c)
 {
     u32 msgid  = 10010;
     u32 device = 10020;
     u16 type = 10030;
-    u8* json = "{\"hello\":\"world\"}";
+    u8* json = NULL;
+    if (c == 'o')
+    {
+        json = "{\"method\":1, \"on_off\":1}";
+    }
+    else if (c == 'f')
+    {
+        json = "{\"method\":1, \"on_off\":0}";
+    }
+    else if (c == 's')
+    {
+        json = "{\"method\":0}";
+    }
     WriteChar(cache, 0xEA);
     WriteChar(cache, 0xEF);
-    WriteChar(cache, 31);
+    WriteChar(cache, 14+digitLength(json));
     WriteChar(cache, 0);
     Write(cache, (u8*)&device, sizeof(u32));
     Write(cache, (u8*)&msgid, sizeof(u32));
@@ -89,9 +132,9 @@ void DebuggerIRQHandler(void)
     if (0 != USARTRecvData(debugger, &r))
     {
         // debug
-//         if ('c' == r)
+//         if ('f' == r || 'o' == r || 's' == r)
 //         {
-//             SendDebugFrameData();
+//             SendDebugFrameData(r);
 //             transmit(debugger);
 //             return;
 //         }

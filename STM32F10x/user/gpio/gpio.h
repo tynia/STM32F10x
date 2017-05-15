@@ -22,4 +22,6 @@ void LLevel(tagEGPIO xGPIO, u16 xPin);
 
 void HLevel(tagEGPIO xGPIO, u16 xPin);
 
+u8 OutputState(tagEGPIO xGPIO, u16 xPin);
+
 #endif
