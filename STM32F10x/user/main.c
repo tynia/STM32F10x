@@ -17,7 +17,7 @@ __task void TaskDebugger()
 {
 #ifdef _DEBUG
     // init debugger
-    InitDebugger(/*USART_COM_3*/USART_COM_4, USART_COM_3);
+    InitDebugger(USART_COM_3/*USART_COM_4*/, USART_COM_3);
 #else
     InitAcceptor(USART_COM_4, irq, 1, USART_COM_4);
 #endif
@@ -47,7 +47,7 @@ __task void TaskA6()
 __task void TaskOn(void)
 {
     OS_TID debugID = os_tsk_create(TaskDebugger, 3);
-    OS_TID a6ID    = os_tsk_create(TaskA6, 3);
+    //OS_TID a6ID    = os_tsk_create(TaskA6, 3);
     
     //console("program start...");
     
