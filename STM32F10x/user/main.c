@@ -57,7 +57,8 @@ __task void TaskOn(void)
 int main(void)
 {
     // init led
-    InitLED(LED_A, GPIO_Pin_2);
+    InitLED(LED_B, GPIO_Pin_5);
+	//InitLED(LED_A, GPIO_Pin_2);
 
     os_sys_init(TaskOn);
 
